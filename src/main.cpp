@@ -1,3 +1,8 @@
+/**
+ * @file main.cpp
+ * @author William Betteridge
+ * @brief The main file and entry point into the program
+ */
 #include <Arduino.h>
 #include <mbed/mbed.h>
 #include <events/mbed_events.h>
@@ -7,35 +12,71 @@
 #include "sensors.h"
 #include "pindef.h"
 
+// Instantiate objects for the other classes
 Joystick my_joystick;
 Motors my_motors;
 Sensors my_sensors;
 
 bool continue_running = true;
 
+/**
+ * @brief A class to act as a wrapper and contain all functions 
+ * and variables for the main file
+ * 
+ */
 class Robot
 {
 public:
 
-	void setup_robot();
+	/**
+	 * @brief Called from the main arduino loop() function
+ 	 * The main function to run the robot and all its processes.
+ 	 * Is continuously called whilst the robot is set to continue running 
+	 * 
+	 * @return true		The robot should continue running its program
+	 * @return false	The robot stops running
+	 */
 	bool run();
+
+	/**
+	 * @brief Stops the robot from moving
+	 * 
+	 */
 	void stop();
 
+	/**
+	 * @brief Setup the occupancy grid
+	 * 
+	 */
 	void setup_occupancy_grid();
 
 private:
 
+	/**
+	 * @brief Checks with the sensors whether objects are within 
+	 * range of the robot
+	 * 
+	 */
 	void detect_obstacle();
+
 	//enum object_detected detect_obstacle();
+
+	/**
+	 * @brief Tell the robot to avoid the obstacles
+	 * that were detected in the detect_obstacle() function
+	 * 
+	 */
 	void avoid_obstacle();
 
 	void turn_right();
 	void turn_left();
 
-	
+	/**
+	 * @brief Prints the occupancy map to the serial port
+	 * and displays the occupancy map in a readable format
+	 * 
+	 */
 	void display_map();
-
-	
 
 	enum object_detected { front_ir, back_ir, left_usonic, right_usonic };
 
@@ -48,13 +89,18 @@ private:
 		STATE_RIGHT,
 	} current_state;
 
+	/**
+	 * @brief Integer to represent which objects are within range of the robot
+	 * 
+	 */
 	unsigned int objects;
 
+	/**
+	 * @brief The Occupancy grid which is used to map out all objects within the map
+	 * Set to 5cm per grid/index giving the maze a total size of approximately 220cm by 160cm
+	 * 
+	 */
 	bool occupancy_grid[44][32] = { 0 };
-
-
-
-
 }my_robot;
 
 
@@ -65,7 +111,10 @@ private:
 
 //mbed::InterruptIn ir_front(0x5E);
 
-// the setup function runs once when you press reset or power the board
+/**
+ * @brief The setup function runs once when you press reset or power the board
+ * 
+ */
 void setup() {
 
 	// // Initialize digital pin LED_BUILTIN as an output.
@@ -74,23 +123,31 @@ void setup() {
 	// Start Serial port at 9600 Baudrate
 	Serial.begin(BAUDRATE);
 
+	// Call the setup function to initialise the joystick so it can be used to control the robot
 	Joystick_setup();
 
+	// Calibrate the motors for use
 	my_motors.calibrate();
+
+	// Set the default direction for the robot to move in
 	my_motors.set_direction(my_motors.DIR_FORWARDS);
 
+	// Attach the interrupts for the encoders on the motors
 	attach_encoder_interrupts();
-
+	
+	// Setup the occupancy grid array to initialise the maze prior to the robot moving
 	my_robot.setup_occupancy_grid();
 
 }
 
-// the loop function runs over and over again forever
+/**
+ * @brief The loop function runs over and over again forever
+ * This is the main loop of the entire program and only exits this loop when reset or powered off
+ */
 void loop() {
-
-	//Serial.println(get_encoder_revolutions_left());
-	//Serial.println(get_encoder_revolutions_right());
 	
+	// If the robot is set to continue running keep on checking the joystick button presses
+	// Else stop the robot from moving
 	if (continue_running == true)
 	{
 		// Forwards direction pressed on Joystick --> Run
@@ -108,6 +165,7 @@ void loop() {
 	{
 		set_button_state(0);
 		my_robot.stop();
+		// Temp variable assignment
 		continue_running = true;
 	}
 
@@ -125,6 +183,14 @@ void loop() {
 	// }
 }
 
+/**
+ * @brief Called from the main arduino loop() function
+ * The main function to run the robot and all its processes.
+ * Is continuously called whilst the robot is set to continue running 
+ * 
+ * @return true		The robot should continue running its program
+ * @return false	The robot stops running
+ */
 bool Robot::run()
 {
 
@@ -145,18 +211,31 @@ bool Robot::run()
 	// 		break;
 	// }
 
+	// Run the functions to read values from the infrared sensors
 	my_sensors.run_IR_sensors();
 
 	//wait_us(500000);
 
+	// Run the functions to read values from the ultrasonic sensors
 	my_sensors.run_usonic_sensors();
 
+	// Set the speed of the motors to half the max speed
 	my_motors.set_speed(0.5f);
+	
+	// Drive the robot forwards
+	// 0 seconds means continue forever until told otherwise
 	my_motors.drive_forwards(0);
+
+	// Detect obstacles in the nearby area
 	// my_robot.detect_obstacle();
+
+	// Avoid obstacles in the nearby area by moving away from them
 	// my_robot.avoid_obstacle();
+
+	// Display the occupancy grid in a readable format
 	my_robot.display_map();
 
+	// Debug statements for calibrating the encoders to check the distance travelled
 	Serial.println("Distance Travelled Left in mm:");
 	Serial.print(get_distance_travelled_left());
 	Serial.print(" mm\n");
@@ -177,11 +256,14 @@ bool Robot::run()
 	// }
 
 	
-
+	// Return true to continue running the loop
 	return true;
 }
 
 /**
+ * @brief Checks with the sensors whether objects are within
+ * range of the robot
+ *
  * @return objects - bitfield defining the surrounding objects
  * 0 - No Objects
  * 1 - Front Object
@@ -228,6 +310,11 @@ void Robot::detect_obstacle()
 	
 }
 
+/**
+ * @brief Tell the robot to avoid the obstacles
+ * that were detected in the detect_obstacle() function
+ * 
+ */
 void Robot::avoid_obstacle()
 {
 	switch(objects)
