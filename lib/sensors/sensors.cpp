@@ -21,7 +21,10 @@ char cmd[2];
  * Turn to face the wall at angle that is the shortest distance
 */
 
-
+/**
+ * @brief Scale sensor distances to be measured from the centre of the robot
+ * 
+ */
 
 
 void Sensors::run_IR_sensors()
@@ -152,16 +155,31 @@ void Sensors::print_usonic_data(int usonic_distance[2])
 	Serial.println(" cm.");
 }
 
+/**
+ * @brief 
+ * 
+ * @return float distance in cm
+ */
 float Sensors::get_front_IR_distance()
 {
 	return infrared_distance[0];
 }
 
+/**
+ * @brief 
+ * 
+ * @return float distance in cm
+ */
 float Sensors::get_back_IR_distance()
 {
 	return infrared_distance[1];
 }
 
+/**
+ * @brief 
+ * 
+ * @return int 
+ */
 int Sensors::get_left_usonic_distance()
 {
 	return usonic_distance[0];

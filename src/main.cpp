@@ -78,6 +78,8 @@ private:
 	 */
 	void display_map();
 
+	void rotate_robot(int degrees);
+
 	enum object_detected { front_ir, back_ir, left_usonic, right_usonic };
 
 	enum robot_state
@@ -483,4 +485,34 @@ void Robot::display_map()
 	// Serial.println("|110011111111000111001111111111|");
 	// Serial.println("--------------------------------");
 
+}
+
+
+void Robot::rotate_robot(int degrees)
+{
+	// Stop robot moving
+	// Call direction change function on motors
+
+	// Calculate equivalent arc of circle
+
+	// Radius from centre of robot to centre of wheel
+	// Radius may be different for both wheels (take average)
+
+	// arc distance = (degrees/360) * 2*pi*radius
+	
+	// Define which wheel is left and which is right.
+	// Left = forwards for turning clockwise
+	// Right = backwards for turning clockwise
+	// Opposite if turning anticlockwise
+
+	// Start robot moving
+
+	// While distance moved < arc length
+	// loop
+	// Get distance moved by wheels
+	// (distance moved could be an average of the two wheels)
+	// delay between distance moved polls
+
+
+	// Stop robot moving
 }

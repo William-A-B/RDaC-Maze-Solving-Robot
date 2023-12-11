@@ -38,7 +38,7 @@ float distance_travelled_left = 0;
 // 0.435mm per 1 encoder revolution
 float distance_travelled_right = 0;
 
-
+// Motors aMotor;
 
 
 
@@ -46,7 +46,14 @@ void attach_encoder_interrupts()
 {
     enc_A_left.rise(&count_pulse_A);
     enc_B_right.rise(&count_pulse_B);
+    //enc_A_left.rise(&aMotor.test);
 }
+
+// void Motors::test()
+// {
+//     int i = 0;
+//     i++;
+// }
 
 /**
  * @param direction
@@ -266,4 +273,5 @@ float get_distance_travelled_right()
 {
     return distance_travelled_right;
 }
+
 
