@@ -6,7 +6,7 @@
 
 #define BAUDRATE 9600 // Baudrate for serial communication
 
-#define MOTORSHIFT 0.5f // Motor calibration constant to correct speed of motors
+#define MOTORSHIFT 0.515f // Motor calibration constant to correct speed of motors
 
 #define MIN_IR_DIST 15.0f // Minimum distance for IR sensor to start detecting objects 
 #define MIN_USONIC_DIST 12 // Minimum distance for USonic sensor to start detecting objects

@@ -1,5 +1,5 @@
-#ifndef MOTORS_H
-#define MOTORS_H
+#ifndef MOTOR_H
+#define MOTOR_H
 
 #include <Arduino.h>
 #include <mbed/mbed.h>
@@ -24,11 +24,11 @@ float get_distance_travelled_left();
 float get_distance_travelled_right();
 
 
-class Motors
+class Motor
 {
 public:
 
-    Motors( ){};
+    Motor( ){};
 
     enum motor_direction
 	{
@@ -69,6 +69,8 @@ private:
     // long int ShaftRevB;
     // long int EncCountB;
     float motor_speed;
+
+    
 
 
     // // Shaft and encoder counters for left motor

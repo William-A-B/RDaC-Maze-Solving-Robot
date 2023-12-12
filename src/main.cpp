@@ -7,14 +7,16 @@
 #include <mbed/mbed.h>
 #include <events/mbed_events.h>
 #include "ble/BLE.h"
-#include "motors.h"
+#include "motor.h"
 #include "joystick.h"
 #include "sensors.h"
 #include "pindef.h"
 
 // Instantiate objects for the other classes
 Joystick my_joystick;
-Motors my_motors;
+Motor my_motors;
+// Motor left_motor;
+// Motor right_motor;
 Sensors my_sensors;
 
 bool continue_running = true;
@@ -103,6 +105,10 @@ private:
 	 * 
 	 */
 	bool occupancy_grid[44][32] = { 0 };
+
+	// Radius of wheels from centre of robot to centre of wheels
+	#define ROBOT_WHEEL_RADIUS 80.0f;
+
 }my_robot;
 
 
@@ -228,6 +234,21 @@ bool Robot::run()
 	// 0 seconds means continue forever until told otherwise
 	my_motors.drive_forwards(0);
 
+	wait_us(2000000);
+
+	my_robot.rotate_robot(90);
+	
+	// Set the speed of the motors to half the max speed
+	my_motors.set_speed(0.5f);
+	
+	// Drive the robot forwards
+	// 0 seconds means continue forever until told otherwise
+	my_motors.drive_forwards(0);
+	
+	wait_us(2000000);
+
+	my_robot.rotate_robot(-90);
+
 	// Detect obstacles in the nearby area
 	// my_robot.detect_obstacle();
 
@@ -235,7 +256,7 @@ bool Robot::run()
 	// my_robot.avoid_obstacle();
 
 	// Display the occupancy grid in a readable format
-	my_robot.display_map();
+	//my_robot.display_map();
 
 	// Debug statements for calibrating the encoders to check the distance travelled
 	Serial.println("Distance Travelled Left in mm:");
@@ -252,8 +273,15 @@ bool Robot::run()
 	Serial.print(get_distance_travelled_right()/10);
 	Serial.print(" cm\n\n");
 
+	Serial.println("==========================================");
+	Serial.println("AVERAGE DISTANCE MOVED BETWEEN BOTH MOTORS");
+	Serial.println(((get_distance_travelled_left() + get_distance_travelled_right())/2));
+	Serial.println("==========================================");
+
 	// if (get_encoder_revolutions_left() >= 1000)
 	// {
+	// 	Serial.println("Final Encoder Count");
+	// 	Serial.println(get_encoder_revolutions_left());
 	// 	return false;
 	// }
 
@@ -487,32 +515,89 @@ void Robot::display_map()
 
 }
 
-
+/**
+ * @brief Rotates the robot about a point a set number of degrees
+ * 
+ * @param degrees 	The number of degrees to rotate, positive = clockwise direction, negative = anticlockwise
+ */
 void Robot::rotate_robot(int degrees)
 {
 	// Stop robot moving
+	my_motors.stop_driving();
+	Serial.println("Degrees to turn");
+	Serial.println(degrees);
+
+	float initial_distance_moved = 0.0f;
+	float distance_moved_while_turning = 0.0f;
+
 	// Call direction change function on motors
+	if (degrees > 0)
+	{
+		my_motors.set_direction(my_motors.DIR_CLOCKWISE);
+		initial_distance_moved = get_distance_travelled_left();
+	}
+	else if (degrees < 0)
+	{
+		degrees = degrees*-1;
+		my_motors.set_direction(my_motors.DIR_ANTICLOCKWISE);
+		initial_distance_moved = get_distance_travelled_right();
+		Serial.println(degrees);
+	}
+	else
+	{
+		return;
+	}
+
+	Serial.println(degrees);
 
 	// Calculate equivalent arc of circle
+	// Left wheel 80mm out from centre
+	// Right wheel 80mm out
 
 	// Radius from centre of robot to centre of wheel
 	// Radius may be different for both wheels (take average)
 
 	// arc distance = (degrees/360) * 2*pi*radius
-	
+	// Distance in mm
+	float arc_distance_to_turn = ((float)degrees/360.0f) * 2.0f * 3.141f * ROBOT_WHEEL_RADIUS;
+
 	// Define which wheel is left and which is right.
 	// Left = forwards for turning clockwise
 	// Right = backwards for turning clockwise
 	// Opposite if turning anticlockwise
 
+	// Get current distance moved as an average of both wheels
+	//float initial_distance_moved = (abs(get_distance_travelled_left()) + abs(get_distance_travelled_right()))/2;
+	
+
 	// Start robot moving
+	my_motors.set_speed(0.5f);
+	my_motors.drive_forwards(0);
 
 	// While distance moved < arc length
 	// loop
 	// Get distance moved by wheels
 	// (distance moved could be an average of the two wheels)
 	// delay between distance moved polls
+	while (distance_moved_while_turning < arc_distance_to_turn)
+	{
+		if (degrees > 0)
+		{
+			distance_moved_while_turning = get_distance_travelled_left() - initial_distance_moved;
+		}
+		else if (degrees < 0)
+		{
+			distance_moved_while_turning = get_distance_travelled_right() - initial_distance_moved;
+		}
+		else
+		{
+			distance_moved_while_turning = get_distance_travelled_left() - initial_distance_moved;
+		}
+		//distance_moved_while_turning = ((abs(get_distance_travelled_left()) + abs(get_distance_travelled_right()))/2) - initial_distance_moved;
+		wait_us(100);
+	}
 
-
-	// Stop robot moving
+	// Stop robot moving and reset direction to forwards
+	my_motors.stop_driving();
+	my_motors.set_direction(my_motors.DIR_FORWARDS);
 }
