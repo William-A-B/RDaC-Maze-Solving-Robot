@@ -107,7 +107,7 @@ private:
     void centre_on_map_grid();
 
 	
-
+    void update_bearing(int angle_to_add);
 	
 
 

@@ -263,7 +263,6 @@ void Robot::move_robot(float distance_to_move)
 	{
 		distance_to_move = distance_to_move * -1;
 		my_motors.set_direction(my_motors.DIR_BACKWARDS);
-        this->bearing = 360-180;
 	}
 	else
 	{
@@ -313,18 +312,17 @@ void Robot::rotate_robot(int degrees)
 
 	// Stop robot moving
 	my_motors.stop_driving();
+    this->update_bearing(degrees);
 
 	// Call direction change function on motors depending on the angle direction
 	if (degrees > 0)
 	{
 		my_motors.set_direction(my_motors.DIR_CLOCKWISE);
-        this->bearing = degrees;
 	}
 	else if (degrees < 0)
 	{
 		degrees = degrees * -1;
 		my_motors.set_direction(my_motors.DIR_ANTICLOCKWISE);
-        this->bearing = 360-degrees;
 	}
 	else
 	{
@@ -408,12 +406,71 @@ void Robot::centre_on_map_grid()
         if (this->bearing == 0)
         {
             this->rotate_robot(90);
-            this->move_robot(-fmod(this->current_position.x_coordinate, 5));
+            this->move_robot(-(fmod(this->current_position.x_coordinate, 5)-2.5));
+        }
+        else if (this->bearing == 90)
+        {
+            this->move_robot(-(fmod(this->current_position.x_coordinate, 5)-2.5));
+        }
+    }
+    else if (fmod(this->current_position.x_coordinate, 5) < 2.5)
+    {
+        if (this->bearing == 0)
+        {
+            this->rotate_robot(90);
+            this->move_robot((fmod(this->current_position.x_coordinate, 5)));
+        }
+        else if (this->bearing == 90)
+        {
+            this->move_robot((fmod(this->current_position.x_coordinate, 5)));
         }
     }
 
+    if (fmod(this->current_position.y_coordinate, 5) > 2.5)
+    {
+        if (this->bearing == 0)
+        {
+            this->move_robot(-(fmod(this->current_position.y_coordinate, 5)-2.5));
+        }
+        else if (this->bearing == 90)
+        {
+            this->rotate_robot(-90);
+            this->move_robot(-(fmod(this->current_position.y_coordinate, 5)-2.5));
+        }
+    }
+    else if (fmod(this->current_position.x_coordinate, 5) < 2.5)
+    {
+        if (this->bearing == 0)
+        {
+            this->move_robot((fmod(this->current_position.x_coordinate, 5)));
+        }
+        else if (this->bearing == 90)
+        {
+            this->rotate_robot(-90);
+            this->move_robot((fmod(this->current_position.x_coordinate, 5)));
+        }
+    }
 }
 
+void Robot::update_bearing(int angle_to_add)
+{
+    if ((this->bearing + angle_to_add) < 360 && (this->bearing + angle_to_add) >= 0)
+    {
+        this->bearing = this->bearing + angle_to_add;
+    }
+    else if ((this->bearing + angle_to_add) == 360)
+    {
+        this->bearing = 0;
+    }
+    else if ((this->bearing + angle_to_add) > 360)
+    {
+        this->bearing = (this->bearing + angle_to_add) - 360;
+    }
+    else if ((this->bearing + angle_to_add) < 0)
+    {
+        this->bearing = this->bearing + angle_to_add + 360;
+    }
+}
 
 
 
