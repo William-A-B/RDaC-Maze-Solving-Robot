@@ -108,7 +108,6 @@ private:
 
 	
     void update_bearing(int angle_to_add);
-	
 
 
 	// VARIABLE DEFINITIONS

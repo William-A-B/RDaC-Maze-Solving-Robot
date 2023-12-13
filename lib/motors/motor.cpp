@@ -54,6 +54,7 @@ void attach_encoder_interrupts()
 {
     enc_A_left.rise(&count_pulse_A);
     enc_B_right.rise(&count_pulse_B);
+    
     //enc_A_left.rise(&aMotor.test);
 }
 

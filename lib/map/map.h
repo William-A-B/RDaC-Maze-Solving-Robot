@@ -7,6 +7,15 @@
 #define X_MAX 32
 #define Y_MAX 44
 
+
+struct robot_position
+{
+    // Robot y position in occupancy grid
+    int y_coordinate;
+    // Robot x position in occupancy grid
+    int x_coordinate;
+};
+
 class Map
 {
 
@@ -40,7 +49,9 @@ public:
 
     bool check_route_ahead(int bearing_heading, int distance_to_move);
 
-    //robot_position get_position_in_map();
+
+
+    
 
 private:
 
@@ -50,13 +61,7 @@ private:
 
     // VARIABLE DEFINITIONS
 
-    struct robot_position
-    {
-        // Robot y position in occupancy grid
-        int y_coordinate;
-        // Robot x position in occupancy grid
-        int x_coordinate;
-    } current_position;
+    robot_position current_position;
     
 
     /**
@@ -66,6 +71,8 @@ private:
 	 */
 	bool occupancy_grid[32][44] = {0};
 
+public:
+    robot_position get_position_in_map();
 
 
 };

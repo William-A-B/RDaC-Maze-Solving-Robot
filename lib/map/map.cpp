@@ -77,7 +77,7 @@ bool Map::check_route_ahead(int bearing_heading, int distance_to_move)
 }
 
 
-// robot_postion Map::get_position_in_map()
-// {
-//     return this->current_position;
-// }
+robot_position Map::get_position_in_map()
+{
+    return this->current_position;
+}
