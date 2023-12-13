@@ -15,6 +15,10 @@ public:
     float get_back_IR_distance();
     int get_right_usonic_distance();
     int get_left_usonic_distance();
+    float read_averaged_IR_sensor_front(int num_sensor_readings);
+    float read_averaged_IR_sensor_back(int num_sensor_readings);
+    int read_averaged_usonic_sensor_left(int num_sensor_readings);
+    int read_averaged_usonic_sensor_right(int num_sensor_readings);
 
 private:
     void read_IR_data(bool front_sensor);
@@ -26,6 +30,8 @@ private:
 
     float infrared_distance[2] = {0};
     int usonic_duration[2], usonic_distance[2];
+    float average_infared_distance;
+    int average_usonic_distance;
 
 };
 

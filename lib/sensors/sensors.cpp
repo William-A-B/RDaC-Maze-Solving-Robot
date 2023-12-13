@@ -2,6 +2,10 @@
 
 mbed::I2C i2c(I2C_SDA, I2C_SCL);
 
+mbed::DigitalInOut usonic_left_sensor(USONIC_SENSOR_PIN_LEFT);
+mbed::DigitalInOut usonic_right_sensor(USONIC_SENSOR_PIN_RIGHT);
+
+
 const char mux_cmd_select_one = 0x01; // Mux select for front IR
 const char mux_cmd_select_two = 0x02; // Mux select for rear IR
 const char mux_addr = 0xEE;
@@ -9,6 +13,8 @@ const char bus_1 = 1;
 const char shift_bit_register = 0x35;
 const int shift_bit = 2;
 char cmd[2];
+
+
 
 
 
@@ -93,6 +99,16 @@ int Sensors::read_usonic_data(bool left_sensor)
 		digitalWrite(USONIC_LEFT, HIGH);
 		delayMicroseconds(15);
 		digitalWrite(USONIC_LEFT, LOW);
+
+		// usonic_left_sensor.output();
+		// usonic_left_sensor.write(0);
+		// wait_us(2);
+		// usonic_left_sensor.write(1);
+		// wait_us(15);
+		// usonic_left_sensor.write(0);
+
+		// usonic_left_sensor.input();
+		// return 
 
 		// The same pin is used to read back the returning signal, so must be set back to input
 		pinMode(USONIC_LEFT, INPUT);
@@ -188,4 +204,63 @@ int Sensors::get_left_usonic_distance()
 int Sensors::get_right_usonic_distance()
 {
 	return usonic_distance[1];
+}
+
+float Sensors::read_averaged_IR_sensor_front(int num_sensor_readings)
+{
+	this->average_infared_distance = 0.0f;
+	for (int sensor_readings = 0; sensor_readings < num_sensor_readings; sensor_readings++)
+	{
+		read_IR_data(true);
+		this->infrared_distance[0] = calculate_infrared_distance(cmd);
+
+		this->average_infared_distance = this->average_infared_distance + this->infrared_distance[0];
+	}
+
+	this->average_infared_distance = (this->average_infared_distance/num_sensor_readings);
+	return this->average_infared_distance;
+}
+
+float Sensors::read_averaged_IR_sensor_back(int num_sensor_readings)
+{
+	this->average_infared_distance = 0.0f;
+	for (int sensor_readings = 0; sensor_readings < num_sensor_readings; sensor_readings++)
+	{
+		read_IR_data(false);
+		this->infrared_distance[1] = calculate_infrared_distance(cmd);
+
+		this->average_infared_distance = this->average_infared_distance + this->infrared_distance[1];
+	}
+
+	this->average_infared_distance = (this->average_infared_distance/num_sensor_readings);
+	return this->average_infared_distance;
+}
+
+
+int Sensors::read_averaged_usonic_sensor_left(int num_sensor_readings)
+{
+	this->average_usonic_distance = 0;
+	for (int sensor_readings = 0; sensor_readings < num_sensor_readings; sensor_readings++)
+	{
+		this->usonic_duration[0] = read_usonic_data(true);
+		this->usonic_distance[0] = calculate_usonic_distance(usonic_duration[0]);
+		this->average_usonic_distance = this->average_usonic_distance + this->usonic_distance[0];
+	}
+
+	this->average_usonic_distance = (this->average_usonic_distance/num_sensor_readings);
+	return this->average_usonic_distance;
+}
+
+int Sensors::read_averaged_usonic_sensor_right(int num_sensor_readings)
+{
+	this->average_usonic_distance = 0;
+	for (int sensor_readings = 0; sensor_readings < num_sensor_readings; sensor_readings++)
+	{
+		this->usonic_duration[1] = read_usonic_data(false);
+		this->usonic_distance[1] = calculate_usonic_distance(usonic_duration[1]);
+		this->average_usonic_distance = this->average_usonic_distance + this->usonic_distance[1];
+	}
+
+	this->average_usonic_distance = (this->average_usonic_distance/num_sensor_readings);
+	return this->average_usonic_distance;
 }
