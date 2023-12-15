@@ -29,6 +29,16 @@ void Robot::initial_setup()
 	my_map.setup_occupancy_grid();
 	
 	//my_robot.calculate_starting_location();
+
+	// Initialize digital pin LED_BUILTIN as an output.
+	pinMode(LED_BUILTIN, OUTPUT);
+	pinMode(LEDR, OUTPUT);
+	pinMode(LEDG, OUTPUT);
+	pinMode(LEDB, OUTPUT);
+	digitalWrite(LED_BUILTIN, LOW);
+	digitalWrite(LEDR, HIGH);
+	digitalWrite(LEDG, HIGH);
+	digitalWrite(LEDB, HIGH);
 }
 
 /**
@@ -37,11 +47,37 @@ void Robot::initial_setup()
  */
 void Robot::setup()
 {
-	this->calculate_starting_location();
-	this->initialise_starting_location_in_map();
-    this->centre_on_map_grid();
+	// this->calculate_starting_location();
+	// this->initialise_starting_location_in_map();
+    // this->centre_on_map_grid();
+
+
+	if (this->check_side_space_left(1))
+	{
+		digitalWrite(LEDR, LOW);
+		digitalWrite(LEDG, LOW);
+		digitalWrite(LEDB, LOW);
+
+		this->rotate_robot(-90);
+		while (this->check_route_ahead(-1))
+		{
+			this->drive_forwards();
+		}
+		this->rotate_robot(90);
+	}
+
+	digitalWrite(LEDR, HIGH);
+	digitalWrite(LEDG, HIGH);
+	digitalWrite(LEDB, HIGH);
+
+	// this->move_robot(1.0f);
+	// wait_us(4000000);
 
 	this->current_state = this->STATE_SOLVE;
+	
+
+
+
 	// this->move_robot(20.0f);
 	// this->rotate_robot(90);
 	// this->move_robot(20.0f);
@@ -54,6 +90,91 @@ void Robot::setup()
  */
 void Robot::solve_maze()
 {
+	while (!this->check_side_space_left(1))
+	{
+		if (this->check_route_ahead(-1))
+		{
+			digitalWrite(LEDG, LOW);
+			digitalWrite(LEDR, HIGH);
+			digitalWrite(LEDB, HIGH);
+			Serial.println("Free space ahead");
+			Serial.println("Driving forwards\n\n");
+			this->drive_forwards();
+		}
+		else
+		{
+			if (!this->check_side_space_left(1))
+			{
+				digitalWrite(LEDR, LOW);
+				digitalWrite(LEDG, HIGH);
+				digitalWrite(LEDB, HIGH);
+				Serial.println("No space ahead and wall on left");
+				Serial.println("Turning Right\n\n");
+				this->rotate_robot(90);
+				this->drive_forwards();
+			}
+		}
+	}
+
+	if (this->check_side_space_left(1))
+	{
+		digitalWrite(LEDB, LOW);
+		digitalWrite(LEDR, HIGH);
+		digitalWrite(LEDG, HIGH);
+		Serial.println("Reached end of left wall");
+		Serial.println("Turning left to continue along next wall\n\n");
+		this->drive_forwards();
+		wait_us(1300000);
+		this->stop_moving();
+		this->rotate_robot(-90);
+		this->drive_forwards();
+		wait_us(1300000);
+		this->stop_moving();
+
+		// this->move_robot(80.0f);
+		// this->rotate_robot(-90);
+		// this->move_robot(80.0f);
+	}
+
+
+
+	// loop_advanced:
+	// 	while (!this->check_side_space_left())
+	// 	{
+	// 		this->drive_forwards();
+	// 		if (this->check_side_space_left())
+	// 		{
+	// 			this->stop_moving();
+	// 			this->move_robot(15.0f);
+	// 			this->rotate_robot(-90);
+	// 			this->move_robot(15.0f);
+	// 		}
+	// 		this->drive_forwards();
+	// 	}
+
+
+	// loop_basic:
+	// 	while (this->check_route_ahead(-1.0f))
+	// 	{
+	// 		this->drive_forwards();
+	// 	}
+	// 	this->stop_moving();
+	// 	goto check_sides;
+
+	// check_sides:
+	// 	if (check_side_space_left())
+	// 	{
+	// 		this->rotate_robot(-90);
+	// 		goto loop_basic;
+	// 	}
+	// 	else if (check_side_space_right())
+	// 	{
+	// 		this->rotate_robot(90);
+	// 		goto loop_advanced;
+	// 	}
+
+
+
 
 
 
@@ -91,7 +212,7 @@ void Robot::solve_maze()
 void Robot::drive_forwards()
 {
 	my_motors.set_direction(my_motors.DIR_FORWARDS);
-	my_motors.set_speed(0.5f);
+	my_motors.set_speed(DEFAULT_ROBOT_SPEED);
 	my_motors.drive_forwards(0);
 }
 
@@ -101,7 +222,7 @@ void Robot::drive_forwards()
 void Robot::stop_moving()
 {
 	my_motors.stop_driving();
-	this->current_state = this->STATE_STOP;
+	//this->current_state = this->STATE_STOP;
 }
 
 /**
@@ -121,8 +242,8 @@ void Robot::move_robot(float distance_to_move)
 {
     float initial_distance_moved_left = 0.0f;
 	float initial_distance_moved_right = 0.0f;
-	float distance_moved_while_turning_left = 0.0f;
-	float distance_moved_while_turning_right = 0.0f;
+	float distance_moved_left = 0.0f;
+	float distance_moved_right = 0.0f;
 	float difference_between_motor_distances = 0.0f;
 
 	bool route_ahead_free = false;
@@ -159,19 +280,19 @@ void Robot::move_robot(float distance_to_move)
 	initial_distance_moved_right = get_distance_travelled_right();
 
     // Start robot moving
-	my_motors.set_speed(0.5f);
+	my_motors.set_speed(DEFAULT_ROBOT_SPEED);
 	my_motors.drive_forwards(0);
 
     while (abs(difference_between_motor_distances) < (distance_to_move * 2.0f))
 	{
 		// Get left wheel distance moved whilst turning robot
-		distance_moved_while_turning_left = get_distance_travelled_left() - initial_distance_moved_left;
+		distance_moved_left = get_distance_travelled_left() - initial_distance_moved_left;
 
 		// Get right wheel distance moved whilst turning robot
-		distance_moved_while_turning_right = get_distance_travelled_right() - initial_distance_moved_right;
+		distance_moved_right = get_distance_travelled_right() - initial_distance_moved_right;
 
 		// Get difference between both motors
-		difference_between_motor_distances = distance_moved_while_turning_left - distance_moved_while_turning_right;
+		difference_between_motor_distances = distance_moved_left + distance_moved_right;
 
 		// Delay to ensure polling of interrupt is not backlogged
 		wait_us(100);
@@ -226,7 +347,7 @@ void Robot::rotate_robot(int degrees)
 	float arc_distance_to_turn = ((float)degrees / 360.0f) * 2.0f * 3.141f * ROBOT_WHEEL_RADIUS;
 
 	// Start robot moving
-	my_motors.set_speed(0.5f);
+	my_motors.set_speed(DEFAULT_ROBOT_SPEED);
 	my_motors.drive_forwards(0);
 
 	// While distance moved < arc length
@@ -383,13 +504,13 @@ bool Robot::check_route_ahead(float distance_to_move)
 
 	if (distance_to_move == -1.0f)
 	{
-		if (distance_to_objects_front > 5.0f)
+		if (distance_to_objects_front > MIN_IR_DIST)
 		{
 			return true;
 		}
 	}
 
-	if (distance_to_objects_front > (distance_to_move + 10))
+	if (distance_to_objects_front > (distance_to_move + MIN_IR_DIST))
 	{
 		return true;
 	}
@@ -406,11 +527,11 @@ bool Robot::check_route_ahead(float distance_to_move)
  * @return true 	True if the robot can turn left and move forwards
  * @return false 	False if the robot cannot move left and something is blocking it
  */
-bool Robot::check_side_space_left()
+bool Robot::check_side_space_left(int num_readings)
 {
-	int left_sensor_distance = my_sensors.read_averaged_usonic_sensor_left(5);
+	int left_sensor_distance = my_sensors.read_averaged_usonic_sensor_left(num_readings);
 	
-	if (left_sensor_distance > 15)
+	if (left_sensor_distance > MIN_USONIC_DIST)
 	{
 		return true;
 	}
@@ -423,11 +544,11 @@ bool Robot::check_side_space_left()
  * @return true 	True if the robot can turn right and move forwards
  * @return false 	False if the robot cannot move left and something is blocking it
  */
-bool Robot::check_side_space_right()
+bool Robot::check_side_space_right(int num_readings)
 {
-	int right_sensor_distance = my_sensors.read_averaged_usonic_sensor_right(5);
+	int right_sensor_distance = my_sensors.read_averaged_usonic_sensor_right(num_readings);
 
-	if (right_sensor_distance > 15)
+	if (right_sensor_distance > MIN_USONIC_DIST)
 	{
 		return true;
 	}

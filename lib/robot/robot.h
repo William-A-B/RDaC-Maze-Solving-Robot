@@ -10,8 +10,9 @@
 #include "errorflag.h"
 
 // Radius of wheels from centre of robot to centre of wheels
-#define ROBOT_WHEEL_RADIUS 80.0f;
-#define MAX_IR_DISTANCE 63.75;
+#define ROBOT_WHEEL_RADIUS 80.0f
+#define MAX_IR_DISTANCE 63.75
+#define DEFAULT_ROBOT_SPEED 0.75f
 
 
 
@@ -31,7 +32,7 @@ class Robot
 {
 public:
 
-	// FUNCTION DEFINITIONS
+	// FUNCTION DECLARATIONS
 
 	/**
 	 * @brief Run once upon powering on the robot.
@@ -82,7 +83,7 @@ public:
     void rotate_robot(int degrees);
 
 
-    // VARIABLE DEFINITIONS
+    // VARIABLE DECLARATIONS
 
     enum robot_state
 	{
@@ -99,7 +100,7 @@ public:
 
 private:
 
-	// FUNCTION DEFINITIONS
+	// FUNCTION DECLARATIONS
 
 	/**
 	 * @brief Calculates the starting position of the robot
@@ -141,7 +142,7 @@ private:
 	 * @return true 	True if the robot can turn left and move forwards
 	 * @return false 	False if the robot cannot move left and something is blocking it
 	 */
-	bool check_side_space_left();
+	bool check_side_space_left(int num_readings);
 
 	/**
 	 * @brief Checks if there is free space to move into on the right of the robot
@@ -149,10 +150,11 @@ private:
 	 * @return true 	True if the robot can turn right and move forwards
 	 * @return false 	False if the robot cannot move left and something is blocking it
 	 */
-    bool check_side_space_right();
+    bool check_side_space_right(int num_readings);
 
-    
-	// VARIABLE DEFINITIONS
+
+
+	// VARIABLE DECLARATIONS
 
 	enum object_detected
 	{

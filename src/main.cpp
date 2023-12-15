@@ -33,6 +33,7 @@ void setup()
 	my_robot.initial_setup();
 
 	my_robot.current_state = my_robot.STATE_SETUP;
+	// my_robot.current_state = my_robot.STATE_SOLVE;
 }
 
 /**

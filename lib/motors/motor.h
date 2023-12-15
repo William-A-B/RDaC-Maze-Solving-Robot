@@ -5,8 +5,9 @@
 #include <mbed/mbed.h>
 #include "pindef.h"
 
+//#define MOTORSHIFT 0.515f // Motor calibration constant to correct speed of motors for a speed of 0.5f
 
-
+#define MOTORSHIFT 0.48f // Motor calibration constant to correct speed of motors for a speed on 0.75f
 
 void count_pulse_A();
 void count_pulse_B();
