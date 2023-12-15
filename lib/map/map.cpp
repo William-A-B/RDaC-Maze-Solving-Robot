@@ -39,9 +39,40 @@ void Map::setup_occupancy_grid()
 }
 
 
-void Map::add_obstacles_to_map(int x_coordinate, int y_coordinate)
+void Map::add_obstacles_to_map(int x_pos, int y_pos)
 {
+	// Place an obstacle into the map at the given coordinate.
+	// Add a 5cm (1 grid-space) tolerance around all sides
 
+	if (x_pos < 0 || x_pos > X_MAX)
+	{
+		//throw ErrorFlag("x coordinate outside map area", true);
+		return;
+	}
+	else if (y_pos < 0 || y_pos > Y_MAX)
+	{
+		//throw ErrorFlag("y coordinate outside map area", true);
+		return;
+	}
+
+
+
+	if (this->occupancy_grid[x_pos][y_pos] == 0)
+	{
+		this->occupancy_grid[x_pos][y_pos] = 1;
+		this->occupancy_grid[x_pos][y_pos+1] = 1;
+		this->occupancy_grid[x_pos+1][y_pos+1] = 1;
+		this->occupancy_grid[x_pos+1][y_pos] = 1;
+		this->occupancy_grid[x_pos+1][y_pos-1] = 1;
+		this->occupancy_grid[x_pos][y_pos-1] = 1;
+		this->occupancy_grid[x_pos-1][y_pos-1] = 1;
+		this->occupancy_grid[x_pos-1][y_pos] = 1;
+		this->occupancy_grid[x_pos-1][y_pos+1] = 1;
+	}
+	else
+	{
+		//throw ErrorFlag("Object already in map at this location", false);
+	}
 }
 
 
@@ -68,16 +99,35 @@ void Map::set_robot_location(int x_coordinate, int y_coordinate)
     this->current_position.y_coordinate = y_coordinate;
 }
 
-bool Map::check_route_ahead(int bearing_heading, int distance_to_move)
+bool Map::check_route_ahead_in_map(int bearing_heading, int distance_to_move)
 {
+	// Check robot current bearing in map
+
+	// Search along direction in map to check for objects
+
+	// If object along axis check if its greater than the distance wanting to move
+
+	// Return true if can move forwards
+
+	// Else return false
+
     // Get current robot position
     // Check direction wanting to move in
     // Check the free space ahead within the space wanting to move in
     // return true or false whether the space ahead is free to move in
+
+
+
+	if (bearing_heading == 0)
+	{
+		
+	}
+
+	return false;
 }
 
 
-robot_position Map::get_position_in_map()
+robot_position_in_map Map::get_position_in_map()
 {
     return this->current_position;
 }

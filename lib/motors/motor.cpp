@@ -48,7 +48,7 @@ float distance_travelled_right = 0;
 
 // Motors aMotor;
 
-
+mbed::InterruptIn testInterrupt(P0_30);
 
 void attach_encoder_interrupts()
 {
@@ -58,11 +58,11 @@ void attach_encoder_interrupts()
     //enc_A_left.rise(&aMotor.test);
 }
 
-// void Motors::test()
-// {
-//     int i = 0;
-//     i++;
-// }
+void Motor::test()
+{
+    int i = 0;
+    i++;
+}
 
 /**
  * @param direction
@@ -101,6 +101,8 @@ void Motor::calibrate()
 {
     motor_left_PWM.period_us(200);
     motor_right_PWM.period_us(200);
+
+    testInterrupt.rise(mbed::callback(this, &Motor::test));
 }
 
 /**

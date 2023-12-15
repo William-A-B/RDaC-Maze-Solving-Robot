@@ -31,6 +31,8 @@ void setup()
 
 	// Setup for robot that is run once at the very start
 	my_robot.initial_setup();
+
+	my_robot.current_state = my_robot.STATE_SETUP;
 }
 
 /**
@@ -41,7 +43,6 @@ void loop()
 {
 	if (my_joystick.check_button_press() == 3)
 	{
-		my_robot.current_state = my_robot.STATE_SETUP;
 		switch (my_robot.current_state)
 		{
 			case my_robot.STATE_SETUP:
@@ -49,8 +50,11 @@ void loop()
 				break;
 			case my_robot.STATE_LOCATE:
 				break;
+			case my_robot.STATE_SOLVE:
+				my_robot.solve_maze();
+				break;
 			case my_robot.STATE_STOP:
-				my_robot.stop();
+				my_robot.stop_moving();
 				break;
 			case my_robot.STATE_FORWARD:
 				my_robot.drive_forwards();
@@ -63,6 +67,9 @@ void loop()
 			case my_robot.STATE_RIGHT:
 				my_robot.rotate_robot(90);
 				break;
+			case my_robot.STATE_END:
+				set_button_state(0);
+				break;
 		}
 	}
 	else if (my_joystick.check_button_press() == 2)
@@ -73,7 +80,7 @@ void loop()
 
 
 	// // If the robot is set to continue running keep on checking the joystick button presses
-	// // Else stop the robot from moving
+	// // Else stop_moving the robot from moving
 	// if (continue_running == true)
 	// {
 	// 	// Forwards direction pressed on Joystick --> Run
@@ -85,13 +92,13 @@ void loop()
 	// 	// Backwards direction pressed on Joystick --> Stop
 	// 	else if (my_joystick.check_button_press() == 2)
 	// 	{
-	// 		my_robot.stop();
+	// 		my_robot.stop_moving();
 	// 	}
 	// }
 	// else
 	// {
 	// 	set_button_state(0);
-	// 	my_robot.stop();
+	// 	my_robot.stop_moving();
 	// }
 }
 

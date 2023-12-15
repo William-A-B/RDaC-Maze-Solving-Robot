@@ -9,6 +9,11 @@ Sensors my_sensors;
 Map my_map(15, 4);
 
 
+
+/**
+ * @brief Run once upon powering on the robot.
+ * Sets up sections of robot which only ever need to be set once
+ */
 void Robot::initial_setup()
 {
     // Calibrate the motors for use
@@ -26,213 +31,63 @@ void Robot::initial_setup()
 	//my_robot.calculate_starting_location();
 }
 
-void Robot::end()
-{
-    this->stop();
-}
-
-
-void Robot::start()
-{
-
-}
-
+/**
+ * @brief Run once the robot is placed at the starting position in the maze
+ * Is a state within the state machine, can be called again to restart the robots algorithms
+ */
 void Robot::setup()
 {
 	this->calculate_starting_location();
 	this->initialise_starting_location_in_map();
     this->centre_on_map_grid();
+
+	this->current_state = this->STATE_SOLVE;
+	// this->move_robot(20.0f);
+	// this->rotate_robot(90);
+	// this->move_robot(20.0f);
 }
 
 /**
- * @brief Called from the main arduino loop() function
- * The main function to run the robot and all its processes.
- * Is continuously called whilst the robot is set to continue running
- *
- * @return true		The robot should continue running its program
- * @return false	The robot stops running
+ * @brief Robot starts solving the maze and finding its way to the end
+ * Runs all algorithms for solving and mapping from this function
+ * Part of state SOLVE within the state machine
  */
-bool Robot::run()
+void Robot::solve_maze()
 {
-	// Run the functions to read values from the infrared sensors
-	my_sensors.run_IR_sensors();
 
-	// wait_us(500000);
 
-	// Run the functions to read values from the ultrasonic sensors
-	my_sensors.run_usonic_sensors();
 
-	// Set the speed of the motors to half the max speed
-	my_motors.set_speed(0.5f);
 
-	// Rotate on spot by 45 degrees for two complete rotations
-	// Detect obstacles within min distance
-	// Add into occupancy map
-	// Decide where to move
 
-	// Drive the robot forwards
-	// 0 seconds means continue forever until told otherwise
-	my_motors.drive_forwards(0);
 
-	wait_us(1000000);
+	// try
+	// {
+	// 	while (this->check_route_ahead(-1.0f))
+	// 	{
+	// 		this->move_robot(5.0f);
 
-	this->rotate_robot(90);
-
-	// Set the speed of the motors to half the max speed
-	my_motors.set_speed(0.5f);
-
-	// Drive the robot forwards
-	// 0 seconds means continue forever until told otherwise
-	my_motors.drive_forwards(0);
-
-	wait_us(1000000);
-
-	this->rotate_robot(-90);
-
-	// Detect obstacles in the nearby area
-	// my_robot.detect_obstacle();
-
-	// Avoid obstacles in the nearby area by moving away from them
-	// my_robot.avoid_obstacle();
-
-	// Display the occupancy grid in a readable format
-	// my_robot.display_map();
-
-	// Return true to continue running the loop
-	return true;
+	// 		if (this->check_side_space_left())
+	// 		{
+	// 			this->rotate_robot(-90);
+	// 		}
+	// 		else if (this->check_side_space_right())
+	// 		{
+	// 			this->rotate_robot(90);
+	// 		}
+	// 	}
+	// }
+	// catch(ErrorFlag err)
+	// {
+	// 	// char reason[] = err.reason;
+	// 	// Serial.println("%s", err.reason);
+	// 	// Serial.println()
+	// 	// Serial.println("err.reason");
+	// }
 }
 
 /**
- * @brief Checks with the sensors whether objects are within
- * range of the robot
- *
- * @return objects - bitfield defining the surrounding objects
- * 0 - No Objects
- * 1 - Front Object
- * 2 - Rear Object
- * 3 - Left Object
- * 4 - Right Object
- * 5 - Front and Rear Object
- * 6 - Front and Left Object
- * 7 - Front and Right Object
- * 8 - Rear and Left Object
- * 9 - Rear and Right Object
- * 10 - Left and Right Objects
- * 11 - Front and Rear and Left Objects
- * 12 - Front and Rear and Right Objects
- * 13 - Front and Left and Right Objects
- * 14 - Rear and Left and Right Objects
- * 15 - Front and Rear and Left and Right Objects
+ * @brief Starts the robot driving forwards at its default speed of 0.5
  */
-void Robot::detect_obstacle()
-{
-	if (my_sensors.get_front_IR_distance() < MIN_IR_DIST)
-	{
-		if (my_sensors.get_left_usonic_distance() < MIN_USONIC_DIST && my_sensors.get_right_usonic_distance() < MIN_USONIC_DIST)
-		{
-			objects = 13;
-		}
-		else if (my_sensors.get_left_usonic_distance() < MIN_USONIC_DIST)
-		{
-			objects = 6;
-		}
-		else if (my_sensors.get_right_usonic_distance() < MIN_USONIC_DIST)
-		{
-			objects = 7;
-		}
-		else
-		{
-			objects = 1;
-		}
-	}
-	else
-	{
-		objects = 0;
-	}
-}
-
-/**
- * @brief Tell the robot to avoid the obstacles
- * that were detected in the detect_obstacle() function
- *
- */
-void Robot::avoid_obstacle()
-{
-	switch (objects)
-	{
-	case 0:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		// my_motors.set_speed(1.0f);
-		break;
-	case 1:
-		my_motors.set_direction(my_motors.DIR_ANTICLOCKWISE);
-		my_motors.set_speed(0.5f);
-		// my_robot.turn_left();
-		break;
-	case 2:
-		my_motors.set_direction(my_motors.DIR_CLOCKWISE);
-		my_motors.set_speed(0.5f);
-		break;
-	case 3:
-		my_motors.set_direction(my_motors.DIR_ANTICLOCKWISE);
-		my_motors.set_speed(0.5f);
-		break;
-	case 4:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	case 5:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	case 6:
-		my_motors.set_direction(my_motors.DIR_CLOCKWISE);
-		my_motors.set_speed(0.5f);
-		break;
-	case 7:
-		my_motors.set_direction(my_motors.DIR_ANTICLOCKWISE);
-		my_motors.set_speed(0.5f);
-		break;
-	case 8:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	case 9:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	case 10:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	case 11:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	case 12:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	case 13:
-		my_motors.set_direction(my_motors.DIR_BACKWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	case 14:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	case 15:
-		my_motors.set_direction(my_motors.DIR_FORWARDS);
-		my_motors.set_speed(0.5f);
-		break;
-	}
-}
-
-void Robot::stop()
-{
-	my_motors.stop_driving();
-}
-
 void Robot::drive_forwards()
 {
 	my_motors.set_direction(my_motors.DIR_FORWARDS);
@@ -240,7 +95,28 @@ void Robot::drive_forwards()
 	my_motors.drive_forwards(0);
 }
 
+/**
+ * @brief Stops the robot from moving
+ */
+void Robot::stop_moving()
+{
+	my_motors.stop_driving();
+	this->current_state = this->STATE_STOP;
+}
 
+/**
+ * @brief Ends all processes on the robot and stops the state machine
+ */
+void Robot::end()
+{
+    this->stop_moving();
+}
+
+/**
+ * @brief Moves the robot a given distance, if the value given is negative the robot will move backwards
+ * 
+ * @param distance_to_move 	The number of cm to move the robot
+ */
 void Robot::move_robot(float distance_to_move)
 {
     float initial_distance_moved_left = 0.0f;
@@ -249,7 +125,16 @@ void Robot::move_robot(float distance_to_move)
 	float distance_moved_while_turning_right = 0.0f;
 	float difference_between_motor_distances = 0.0f;
 
-    my_map.check_route_ahead(this->bearing, distance_to_move);
+	bool route_ahead_free = false;
+	
+	route_ahead_free = this->check_route_ahead(distance_to_move);
+    //my_map.check_route_ahead_in_map(this->bearing, distance_to_move);
+
+	if (route_ahead_free == false)
+	{
+		//throw ErrorFlag("Could not move forwards as space was not free", true);
+		return;
+	}
 
     // Stop robot moving
 	my_motors.stop_driving();
@@ -369,7 +254,11 @@ void Robot::rotate_robot(int degrees)
 	my_motors.set_direction(my_motors.DIR_FORWARDS);
 }
 
-
+/**
+ * @brief Calculates the starting position of the robot
+ * Checks surrounding areas based on sensors
+ * And sets the coordinate values based on the sensors
+ */
 void Robot::calculate_starting_location()
 {
 	float front_sensor_distance = my_sensors.read_averaged_IR_sensor_front(5);
@@ -396,6 +285,9 @@ void Robot::initialise_starting_location_in_map()
     my_map.set_robot_location(this->current_position.x_coordinate, this->current_position.y_coordinate);
 }
 
+/**
+ * @brief Centres the robot in the middle of the occupancy grid square
+ */
 void Robot::centre_on_map_grid()
 {
     float x_distance_to_move = 0.0f;
@@ -452,6 +344,11 @@ void Robot::centre_on_map_grid()
     }
 }
 
+/**
+ * @brief Updates the robots bearing to identify the direction in which the robot is currently heading
+ * 
+ * @param angle_to_add 	The angle in which the robot is currently turning by
+ */
 void Robot::update_bearing(int angle_to_add)
 {
     if ((this->bearing + angle_to_add) < 360 && (this->bearing + angle_to_add) >= 0)
@@ -472,6 +369,275 @@ void Robot::update_bearing(int angle_to_add)
     }
 }
 
+/**
+ * @brief Checks the space in front of the robot to see if there is free space or not
+ * Decides whether the robot is able to move forwards the specified distance
+ * 
+ * @param distance_to_move 	The distance to check whether the robot can move forwards
+ * @return true 			True if the robot is allowed to move forwards
+ * @return false 			False if there is an object in the way and the robot can't move forwards
+ */
+bool Robot::check_route_ahead(float distance_to_move)
+{
+	float distance_to_objects_front = my_sensors.read_averaged_IR_sensor_front(5);
+
+	if (distance_to_move == -1.0f)
+	{
+		if (distance_to_objects_front > 5.0f)
+		{
+			return true;
+		}
+	}
+
+	if (distance_to_objects_front > (distance_to_move + 10))
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+	return false;
+}
+
+/**
+ * @brief Checks if there is free space to move into on the left of the robot
+ * 
+ * @return true 	True if the robot can turn left and move forwards
+ * @return false 	False if the robot cannot move left and something is blocking it
+ */
+bool Robot::check_side_space_left()
+{
+	int left_sensor_distance = my_sensors.read_averaged_usonic_sensor_left(5);
+	
+	if (left_sensor_distance > 15)
+	{
+		return true;
+	}
+	return false;
+}
+
+/**
+ * @brief Checks if there is free space to move into on the right of the robot
+ * 
+ * @return true 	True if the robot can turn right and move forwards
+ * @return false 	False if the robot cannot move left and something is blocking it
+ */
+bool Robot::check_side_space_right()
+{
+	int right_sensor_distance = my_sensors.read_averaged_usonic_sensor_right(5);
+
+	if (right_sensor_distance > 15)
+	{
+		return true;
+	}
+	return false;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// EXTRA CODE OR OLD CODE OR TEST CODE
+
+
+
+
+// /**
+//  * @brief Called from the main arduino loop() function
+//  * The main function to run the robot and all its processes.
+//  * Is continuously called whilst the robot is set to continue running
+//  *
+//  * @return true		The robot should continue running its program
+//  * @return false	The robot stops running
+//  */
+// bool Robot::run()
+// {
+// 	// Run the functions to read values from the infrared sensors
+// 	my_sensors.run_IR_sensors();
+
+// 	// wait_us(500000);
+
+// 	// Run the functions to read values from the ultrasonic sensors
+// 	my_sensors.run_usonic_sensors();
+
+// 	// Set the speed of the motors to half the max speed
+// 	my_motors.set_speed(0.5f);
+
+// 	// Rotate on spot by 45 degrees for two complete rotations
+// 	// Detect obstacles within min distance
+// 	// Add into occupancy map
+// 	// Decide where to move
+
+// 	// Drive the robot forwards
+// 	// 0 seconds means continue forever until told otherwise
+// 	my_motors.drive_forwards(0);
+
+// 	wait_us(1000000);
+
+// 	this->rotate_robot(90);
+
+// 	// Set the speed of the motors to half the max speed
+// 	my_motors.set_speed(0.5f);
+
+// 	// Drive the robot forwards
+// 	// 0 seconds means continue forever until told otherwise
+// 	my_motors.drive_forwards(0);
+
+// 	wait_us(1000000);
+
+// 	this->rotate_robot(-90);
+
+// 	// Detect obstacles in the nearby area
+// 	// my_robot.detect_obstacle();
+
+// 	// Avoid obstacles in the nearby area by moving away from them
+// 	// my_robot.avoid_obstacle();
+
+// 	// Display the occupancy grid in a readable format
+// 	// my_robot.display_map();
+
+// 	// Return true to continue running the loop
+// 	return true;
+// }
+
+
+
+
+// /**
+//  * @brief Checks with the sensors whether objects are within
+//  * range of the robot
+//  *
+//  * @return objects - bitfield defining the surrounding objects
+//  * 0 - No Objects
+//  * 1 - Front Object
+//  * 2 - Rear Object
+//  * 3 - Left Object
+//  * 4 - Right Object
+//  * 5 - Front and Rear Object
+//  * 6 - Front and Left Object
+//  * 7 - Front and Right Object
+//  * 8 - Rear and Left Object
+//  * 9 - Rear and Right Object
+//  * 10 - Left and Right Objects
+//  * 11 - Front and Rear and Left Objects
+//  * 12 - Front and Rear and Right Objects
+//  * 13 - Front and Left and Right Objects
+//  * 14 - Rear and Left and Right Objects
+//  * 15 - Front and Rear and Left and Right Objects
+//  */
+// void Robot::detect_obstacle()
+// {
+// 	if (my_sensors.get_front_IR_distance() < MIN_IR_DIST)
+// 	{
+// 		if (my_sensors.get_left_usonic_distance() < MIN_USONIC_DIST && my_sensors.get_right_usonic_distance() < MIN_USONIC_DIST)
+// 		{
+// 			objects = 13;
+// 		}
+// 		else if (my_sensors.get_left_usonic_distance() < MIN_USONIC_DIST)
+// 		{
+// 			objects = 6;
+// 		}
+// 		else if (my_sensors.get_right_usonic_distance() < MIN_USONIC_DIST)
+// 		{
+// 			objects = 7;
+// 		}
+// 		else
+// 		{
+// 			objects = 1;
+// 		}
+// 	}
+// 	else
+// 	{
+// 		objects = 0;
+// 	}
+// }
+
+// /**
+//  * @brief Tell the robot to avoid the obstacles
+//  * that were detected in the detect_obstacle() function
+//  *
+//  */
+// void Robot::avoid_obstacle()
+// {
+// 	switch (objects)
+// 	{
+// 	case 0:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		// my_motors.set_speed(1.0f);
+// 		break;
+// 	case 1:
+// 		my_motors.set_direction(my_motors.DIR_ANTICLOCKWISE);
+// 		my_motors.set_speed(0.5f);
+// 		// my_robot.turn_left();
+// 		break;
+// 	case 2:
+// 		my_motors.set_direction(my_motors.DIR_CLOCKWISE);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 3:
+// 		my_motors.set_direction(my_motors.DIR_ANTICLOCKWISE);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 4:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 5:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 6:
+// 		my_motors.set_direction(my_motors.DIR_CLOCKWISE);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 7:
+// 		my_motors.set_direction(my_motors.DIR_ANTICLOCKWISE);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 8:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 9:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 10:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 11:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 12:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 13:
+// 		my_motors.set_direction(my_motors.DIR_BACKWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 14:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	case 15:
+// 		my_motors.set_direction(my_motors.DIR_FORWARDS);
+// 		my_motors.set_speed(0.5f);
+// 		break;
+// 	}
+// }
 
 
 
@@ -485,7 +651,7 @@ void Robot::update_bearing(int angle_to_add)
 	// switch (current_state)
 	// {
 	// 	case STATE_STOP:
-	// 		my_robot.stop();
+	// 		my_robot.stop_moving();
 	// 		break;
 	// 	case STATE_FORWARD:
 	// 		break;

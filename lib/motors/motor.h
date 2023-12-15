@@ -48,7 +48,7 @@ public:
     void set_speed(float speed);
     float get_speed();
 
-    // void test();
+    void test();
 
 
 

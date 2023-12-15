@@ -3,12 +3,13 @@
 
 #include <Arduino.h>
 #include <mbed/mbed.h>
+#include "errorflag.h"
 
 #define X_MAX 32
 #define Y_MAX 44
 
 
-struct robot_position
+struct robot_position_in_map
 {
     // Robot y position in occupancy grid
     int y_coordinate;
@@ -47,7 +48,7 @@ public:
 
     void set_robot_location(int x_coordinate, int y_coordinate);
 
-    bool check_route_ahead(int bearing_heading, int distance_to_move);
+    bool check_route_ahead_in_map(int bearing_heading, int distance_to_move);
 
 
 
@@ -61,7 +62,7 @@ private:
 
     // VARIABLE DEFINITIONS
 
-    robot_position current_position;
+    robot_position_in_map current_position;
     
 
     /**
@@ -72,7 +73,7 @@ private:
 	bool occupancy_grid[32][44] = {0};
 
 public:
-    robot_position get_position_in_map();
+    robot_position_in_map get_position_in_map();
 
 
 };
