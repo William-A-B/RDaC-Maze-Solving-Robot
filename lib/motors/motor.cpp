@@ -19,50 +19,15 @@ mbed::DigitalIn encoder_right_in(MOTOR_RIGHT_ENCODER);
 mbed::DigitalIn encoder_right_in_secondary(MOTOR_RIGHT_ENCODER_SECONDARY);
 
 
-// Shaft and encoder counters for left motor
-long int shaft_rev_A = 0;
-long int enc_count_A = 0;
 
-// Shaft and encoder counters for right motor
-long int shaft_rev_B = 0;
-long int enc_count_B = 0;
 
-// The absolute distance travelled based on the left motor encoder
-// In mm
-// Per 1000 on right wheel - 46cm length
-// 0.46mm per 1 encoder count
-// 1000 46.25cm = 0.4625mm
-// 0.46125 per 1 encoder count avg
-float distance_travelled_left = 0;
-
-// The absolute distance travelled based on the right motor encoder
-// In mm
-// Per 1000 on right wheel - 43.5cm length
-// 0.435mm per 1 encoder revolution
-// 1013 and 17.8cm
-// 1008 17.2cm = 0.1706
-// 1007 17.5cm = 0.1738
-// 1002 17.25cm = 0.1722
-// 0.1722mm per 1 encoder count avg
-float distance_travelled_right = 0;
+void Motor::attach_encoder_interrupts()
+{
+    enc_A_left.rise(mbed::callback(this, &Motor::count_pulse_left));
+    enc_B_right.rise(mbed::callback(this, &Motor::count_pulse_right));
+}
 
 // Motors aMotor;
-
-mbed::InterruptIn testInterrupt(P0_30);
-
-void attach_encoder_interrupts()
-{
-    enc_A_left.rise(&count_pulse_A);
-    enc_B_right.rise(&count_pulse_B);
-    
-    //enc_A_left.rise(&aMotor.test);
-}
-
-void Motor::test()
-{
-    int i = 0;
-    i++;
-}
 
 /**
  * @param direction
@@ -97,19 +62,17 @@ void Motor::set_direction(motor_direction current_direction)
 
 
 
-void Motor::calibrate()
+void Motor::setup()
 {
     motor_left_PWM.period_us(200);
     motor_right_PWM.period_us(200);
-
-    testInterrupt.rise(mbed::callback(this, &Motor::test));
 }
 
 /**
  * @param time_to_drive_forwards - How long to drive forwards for in ms
  * Sets the motors to drive in the direction set and at the speed set by the set_speed function
  */
-void Motor::drive_forwards(int time_to_drive_forwards)
+void Motor::drive(int time_to_drive_forwards)
 {
     // if (motor_speed == 0)
     // {
@@ -135,37 +98,40 @@ void Motor::stop_driving()
     motor_right_PWM.write(0.0f);
 }
 
+
 void Motor::turn_left(int angle)
 {
-    stop_driving();
+    motor_right_PWM.write(0.6f);
+    // stop_driving();
 
-    mbed::Timer timer;
-    timer.start();
-    while (timer.elapsed_time().count() < 2.25 * 1000000)
-    {
-        set_direction(DIR_ANTICLOCKWISE);
-        drive_forwards(0);
-    }
-    timer.stop();
-    set_direction(DIR_FORWARDS);
-
-    // long int current_shaft = shaft_rev_A;
-    // while (shaft_rev_A < current_shaft + 150)
+    // mbed::Timer timer;
+    // timer.start();
+    // while (timer.elapsed_time().count() < 2.25 * 1000000)
     // {
-    //     motor_left_PWM.write(0.5*MOTORSHIFT);
+    //     set_direction(DIR_ANTICLOCKWISE);
+    //     drive(0);
     // }
+    // timer.stop();
+    // set_direction(DIR_FORWARDS);
+
+    // // long int current_shaft = shaft_rev_A;
+    // // while (shaft_rev_A < current_shaft + 150)
+    // // {
+    // //     motor_left_PWM.write(0.5*MOTORSHIFT);
+    // // }
 }
 
 void Motor::turn_right(int angle)
 {
-    stop_driving();
+    motor_right_PWM.write(0.4f);
+    // stop_driving();
 
-    long int current_shaft = shaft_rev_B;
-    while (shaft_rev_B < current_shaft + 150)
-    {
-        motor_right_PWM.write(0.5);
-    }
-    stop_driving();
+    // long int current_shaft = shaft_rev_B;
+    // while (shaft_rev_B < current_shaft + 150)
+    // {
+    //     motor_right_PWM.write(0.5);
+    // }
+    // stop_driving();
 }
 
 void Motor::set_speed(float speed_to_set)
@@ -197,35 +163,51 @@ float Motor::get_speed()
     return motor_speed;
 }
 
-void count_pulse_A()
+void Motor::count_pulse_left()
 {
     if (encoder_left_in != encoder_left_in_secondary)
     {
-        distance_travelled_left = distance_travelled_left + 0.46125f;
+        distance_travelled_left = distance_travelled_left + 0.046125f;
+        if (enc_count_A % 329)
+        {
+            wheel_rotations_left++;
+        }
     }
     else
     {
-        distance_travelled_left = distance_travelled_left - 0.46125f;
+        distance_travelled_left = distance_travelled_left - 0.046125f;
+        if (enc_count_A % 329)
+        {
+            wheel_rotations_left--;
+        }
     }
     //distance_travelled_left = distance_travelled_left + 0.435;
     enc_count_A++;
 }
 
-void count_pulse_B()
+void Motor::count_pulse_right()
 {
     if (encoder_right_in != encoder_right_in_secondary)
     {
-        distance_travelled_right = distance_travelled_right - 0.1722f;
+        distance_travelled_right = distance_travelled_right - 0.01722f;
+        if (enc_count_B % 865)
+        {
+            wheel_rotations_right++;
+        }
     }
     else
     {
-        distance_travelled_right = distance_travelled_right + 0.1722f;
+        distance_travelled_right = distance_travelled_right + 0.01722f;
+        if (enc_count_B % 865)
+        {
+            wheel_rotations_right--;
+        }
     }
     //distance_travelled_right = distance_travelled_right + 0.435;
     enc_count_B++;
 }
 
-// void count_pulse_B()
+// void count_pulse_right()
 // {
 //     if(enc_count_B%12 == 0)
 //     {
@@ -237,52 +219,74 @@ void count_pulse_B()
 //     enc_count_B++;
 // }
 
-long int get_shaft_revolutions_left()
+float Motor::calculate_distance_by_wheel_rotations_left()
+{
+    float distance_moved_left = WHEEL_DIAMETER * PI * wheel_rotations_left;
+    return distance_moved_left;
+}
+
+float Motor::calculate_distance_by_wheel_rotations_right()
+{
+    float distance_moved_right = WHEEL_DIAMETER * PI * wheel_rotations_right;
+    return distance_moved_right;
+}
+
+int Motor::get_wheel_rotations_left()
+{
+    return wheel_rotations_left;
+}
+
+int Motor::get_wheel_rotations_right()
+{
+    return wheel_rotations_right;
+}
+
+long int Motor::get_shaft_revolutions_left()
 {
     return shaft_rev_A;
 }
 
-long int get_shaft_revolutions_right()
+long int Motor::get_shaft_revolutions_right()
 {
     return shaft_rev_B;
 }
 
-long int get_encoder_revolutions_left()
+long int Motor::get_encoder_revolutions_left()
 {
     return enc_count_A;
 }
 
-long int get_encoder_revolutions_right()
+long int Motor::get_encoder_revolutions_right()
 {
     return enc_count_B;
 }
 
-void set_distance_travelled_left(float distance_to_set)
+void Motor::set_distance_travelled_left(float distance_to_set)
 {
     distance_travelled_left = distance_to_set;
 }
 
-void increment_distance_travelled_left(float distance_to_increase)
+void Motor::increment_distance_travelled_left(float distance_to_increase)
 {
     distance_travelled_left = distance_travelled_left + distance_to_increase;
 }
 
-float get_distance_travelled_left()
+float Motor::get_distance_travelled_left()
 {
     return distance_travelled_left;
 }
 
-void set_distance_travelled_right(float distance_to_set)
+void Motor::set_distance_travelled_right(float distance_to_set)
 {
     distance_travelled_right = distance_to_set;
 }
 
-void increment_distance_travelled_right(float distance_to_increase)
+void Motor::increment_distance_travelled_right(float distance_to_increase)
 {
     distance_travelled_right = distance_travelled_right + distance_to_increase;
 }
 
-float get_distance_travelled_right()
+float Motor::get_distance_travelled_right()
 {
     return distance_travelled_right;
 }

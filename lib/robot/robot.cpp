@@ -9,6 +9,37 @@ Sensors my_sensors;
 Map my_map(15, 4);
 
 
+/**
+ * @brief Function used to test various features. Any code implementation is often temporary
+ * But may be promoted up to its own function at later use.
+ */
+void Robot::test()
+{
+	// Serial.println("\n\nLeft Encoder amount:");
+	// Serial.println(my_motors.get_encoder_revolutions_left());
+	// Serial.println("\nRight Encoder amount:");
+	// Serial.println(my_motors.get_encoder_revolutions_right());
+
+	// Serial.println("\n\nLeft Wheel rotations");
+	// Serial.println(my_motors.get_wheel_rotations_left());
+	// Serial.println("\nRight Wheel rotations");
+	// Serial.println(my_motors.get_wheel_rotations_right());
+
+	// Serial.println("\n\nDistance moved left wheel");
+	// Serial.println(my_motors.calculate_distance_by_wheel_rotations_left());
+	// Serial.println("\nDistance moved right wheel");
+	// Serial.println(my_motors.calculate_distance_by_wheel_rotations_right());
+
+	// Serial.println("\n\nACTUAL DISTANCE LEFT");
+	// Serial.println(my_motors.get_distance_travelled_left());
+	// Serial.println("\nACTUAL DISTANCE RIGHT");
+	// Serial.println(my_motors.get_distance_travelled_right());
+
+	this->drive_backwards();
+	wait_us(100000);
+}
+
+
 
 /**
  * @brief Run once upon powering on the robot.
@@ -17,13 +48,13 @@ Map my_map(15, 4);
 void Robot::initial_setup()
 {
     // Calibrate the motors for use
-	my_motors.calibrate();
+	my_motors.setup();
 
 	// Set the default direction for the robot to move in
 	my_motors.set_direction(my_motors.DIR_FORWARDS);
 
 	// Attach the interrupts for the encoders on the motors
-	attach_encoder_interrupts();
+	my_motors.attach_encoder_interrupts();
 
 	// Setup the occupancy grid array to initialise the maze prior to the robot moving
 	my_map.setup_occupancy_grid();
@@ -47,9 +78,9 @@ void Robot::initial_setup()
  */
 void Robot::setup()
 {
-	// this->calculate_starting_location();
-	// this->initialise_starting_location_in_map();
-    // this->centre_on_map_grid();
+	this->calculate_starting_location();
+	this->initialise_starting_location_in_map();
+    this->centre_on_map_grid();
 
 
 	if (this->check_side_space_left(1))
@@ -90,120 +121,146 @@ void Robot::setup()
  */
 void Robot::solve_maze()
 {
-	while (!this->check_side_space_left(1))
+	algorithm = DIRECT_AND_AROUND;
+
+	bool can_move_forwards = false;
+	bool reverse = false;
+
+	if (algorithm == DIRECT_AND_AROUND)
 	{
-		if (this->check_route_ahead(-1))
+		can_move_forwards = this->check_route_ahead(-1.0f);
+
+		if (can_move_forwards)
 		{
+			this->drive_forwards();
+			initial_distance_moved_left = my_motors.get_distance_travelled_left();
+			initial_distance_moved_right = my_motors.get_distance_travelled_right();
 			digitalWrite(LEDG, LOW);
 			digitalWrite(LEDR, HIGH);
 			digitalWrite(LEDB, HIGH);
-			Serial.println("Free space ahead");
-			Serial.println("Driving forwards\n\n");
-			this->drive_forwards();
 		}
 		else
 		{
-			if (!this->check_side_space_left(1))
+			this->stop_moving();
+			determine_new_distance_moved();
+
+			if (this->check_side_space_left(1))
 			{
-				digitalWrite(LEDR, LOW);
+				this->rotate_robot(-90);
+				digitalWrite(LEDB, LOW);
+				digitalWrite(LEDR, HIGH);
 				digitalWrite(LEDG, HIGH);
-				digitalWrite(LEDB, HIGH);
-				Serial.println("No space ahead and wall on left");
-				Serial.println("Turning Right\n\n");
+			}
+			else if (this->check_side_space_right(1))
+			{
 				this->rotate_robot(90);
-				this->drive_forwards();
+				digitalWrite(LEDB, LOW);
+				digitalWrite(LEDR, HIGH);
+				digitalWrite(LEDG, HIGH);
+			}
+			else
+			{
+				reverse = true;
+				while (reverse)
+				{
+					this->drive_backwards();
+					digitalWrite(LEDR, LOW);
+					digitalWrite(LEDG, HIGH);
+					digitalWrite(LEDB, HIGH);
+					wait_us(10000);
+					// if (my_sensors.get_back_IR_distance() < MIN_IR_DIST_REAR)
+					// {
+					// 	reverse = false;
+					// 	this->stop_moving();
+					// 	digitalWrite(LEDR, LOW);
+					// 	digitalWrite(LEDG, LOW);
+					// 	digitalWrite(LEDB, LOW);
+					// }
+
+					if (this->check_side_space_left(1))
+					{
+						reverse = false;
+						this->rotate_robot(-90);
+					}
+					else if (this->check_side_space_right(1))
+					{
+						reverse = false;
+						this->rotate_robot(90);
+					}
+					
+				}
 			}
 		}
 	}
-
-	if (this->check_side_space_left(1))
+	else if (algorithm == FOLLOW_WALL)
 	{
-		digitalWrite(LEDB, LOW);
-		digitalWrite(LEDR, HIGH);
-		digitalWrite(LEDG, HIGH);
-		Serial.println("Reached end of left wall");
-		Serial.println("Turning left to continue along next wall\n\n");
-		this->drive_forwards();
-		wait_us(1300000);
-		this->stop_moving();
-		this->rotate_robot(-90);
-		this->drive_forwards();
-		wait_us(1300000);
-		this->stop_moving();
+		bool reached_next_wall = false;
 
-		// this->move_robot(80.0f);
-		// this->rotate_robot(-90);
-		// this->move_robot(80.0f);
+		while (!this->check_side_space_left(1))
+		{	
+			reached_next_wall = false;
+			//this->drive_forwards();
+			if (this->check_route_ahead(-1))
+			{
+				digitalWrite(LEDG, LOW);
+				digitalWrite(LEDR, HIGH);
+				digitalWrite(LEDB, HIGH);
+				Serial.println("Free space ahead");
+				Serial.println("Driving forwards\n\n");
+				this->drive_forwards();
+			}
+			else
+			{
+				if (!this->check_side_space_left(1))
+				{
+					digitalWrite(LEDR, LOW);
+					digitalWrite(LEDG, HIGH);
+					digitalWrite(LEDB, HIGH);
+					Serial.println("No space ahead and wall on left");
+					Serial.println("Turning Right\n\n");
+					this->rotate_robot(90);
+					this->drive_forwards();
+				}
+			}
+		}
+
+		if (this->check_side_space_left(1))
+		{
+			digitalWrite(LEDB, LOW);
+			digitalWrite(LEDR, HIGH);
+			digitalWrite(LEDG, HIGH);
+			Serial.println("Reached end of left wall");
+			Serial.println("Turning left to continue along next wall\n\n");
+			
+			this->move_robot(11.0f);
+			this->rotate_robot(-90);
+			this->move_robot(11.0f);
+
+			// while (!reached_next_wall)
+			// {
+			// 	this->drive_forwards();
+			// 	if (!this->check_route_ahead(-1))
+			// 	{
+			// 		this->stop_moving();
+			// 		break;
+			// 	}
+			// 	if (!this->check_side_space_left(1))
+			// 	{
+			// 		reached_next_wall = true;
+			// 		this->stop_moving();
+			// 		wait_us(500000);
+			// 	}
+			// }
+
+			// this->move_robot(80.0f);
+			// this->rotate_robot(-90);
+			// this->move_robot(80.0f);
+		}
 	}
+	else if (algorithm == NAVIGATE_MAP)
+	{
 
-
-
-	// loop_advanced:
-	// 	while (!this->check_side_space_left())
-	// 	{
-	// 		this->drive_forwards();
-	// 		if (this->check_side_space_left())
-	// 		{
-	// 			this->stop_moving();
-	// 			this->move_robot(15.0f);
-	// 			this->rotate_robot(-90);
-	// 			this->move_robot(15.0f);
-	// 		}
-	// 		this->drive_forwards();
-	// 	}
-
-
-	// loop_basic:
-	// 	while (this->check_route_ahead(-1.0f))
-	// 	{
-	// 		this->drive_forwards();
-	// 	}
-	// 	this->stop_moving();
-	// 	goto check_sides;
-
-	// check_sides:
-	// 	if (check_side_space_left())
-	// 	{
-	// 		this->rotate_robot(-90);
-	// 		goto loop_basic;
-	// 	}
-	// 	else if (check_side_space_right())
-	// 	{
-	// 		this->rotate_robot(90);
-	// 		goto loop_advanced;
-	// 	}
-
-
-
-
-
-
-
-
-
-	// try
-	// {
-	// 	while (this->check_route_ahead(-1.0f))
-	// 	{
-	// 		this->move_robot(5.0f);
-
-	// 		if (this->check_side_space_left())
-	// 		{
-	// 			this->rotate_robot(-90);
-	// 		}
-	// 		else if (this->check_side_space_right())
-	// 		{
-	// 			this->rotate_robot(90);
-	// 		}
-	// 	}
-	// }
-	// catch(ErrorFlag err)
-	// {
-	// 	// char reason[] = err.reason;
-	// 	// Serial.println("%s", err.reason);
-	// 	// Serial.println()
-	// 	// Serial.println("err.reason");
-	// }
+	}
 }
 
 /**
@@ -213,7 +270,17 @@ void Robot::drive_forwards()
 {
 	my_motors.set_direction(my_motors.DIR_FORWARDS);
 	my_motors.set_speed(DEFAULT_ROBOT_SPEED);
-	my_motors.drive_forwards(0);
+	my_motors.drive(0);
+}
+
+/**
+ * @brief Starts the robot driving backwards at its default speed of 0.5
+ */
+void Robot::drive_backwards()
+{
+	my_motors.set_direction(my_motors.DIR_BACKWARDS);
+	my_motors.set_speed(DEFAULT_ROBOT_SPEED);
+	my_motors.drive(0);
 }
 
 /**
@@ -236,7 +303,7 @@ void Robot::end()
 /**
  * @brief Moves the robot a given distance, if the value given is negative the robot will move backwards
  * 
- * @param distance_to_move 	The number of cm to move the robot
+ * @param distance_to_move 	The number of mm to move the robot
  */
 void Robot::move_robot(float distance_to_move)
 {
@@ -247,27 +314,36 @@ void Robot::move_robot(float distance_to_move)
 	float difference_between_motor_distances = 0.0f;
 
 	bool route_ahead_free = false;
+	bool reached_distance = false;
+
+	int loop_count = 0;
+
+
+	// Stop robot moving
+	my_motors.stop_driving();
 	
+	// Check that space ahead the robot is wanting to move is free
 	route_ahead_free = this->check_route_ahead(distance_to_move);
     //my_map.check_route_ahead_in_map(this->bearing, distance_to_move);
 
+	// If route ahead is not clear, return and don't move forwards.
 	if (route_ahead_free == false)
 	{
 		//throw ErrorFlag("Could not move forwards as space was not free", true);
 		return;
 	}
 
-    // Stop robot moving
-	my_motors.stop_driving();
-
     // Call direction change function on motors depending on the angle direction
+	// positive = forwards
+	// negative = backwards
 	if (distance_to_move > 0)
 	{
 		my_motors.set_direction(my_motors.DIR_FORWARDS);
 	}
 	else if (distance_to_move < 0)
 	{
-		distance_to_move = distance_to_move * -1;
+		// Since the distance is negative, make it positive for using in the calculation later
+		distance_to_move = distance_to_move * -1.0f;
 		my_motors.set_direction(my_motors.DIR_BACKWARDS);
 	}
 	else
@@ -275,28 +351,60 @@ void Robot::move_robot(float distance_to_move)
 		return;
 	}
 
-    // Calculate current distance the robot has moved before the robot starts turning the set amount
-	initial_distance_moved_left = get_distance_travelled_left();
-	initial_distance_moved_right = get_distance_travelled_right();
+    // Calculate current distance the robot has moved before the robot starts moving the set amount
+	initial_distance_moved_left = my_motors.get_distance_travelled_left();
+	initial_distance_moved_right = my_motors.get_distance_travelled_right();
 
     // Start robot moving
 	my_motors.set_speed(DEFAULT_ROBOT_SPEED);
-	my_motors.drive_forwards(0);
+	my_motors.drive(0);
 
-    while (abs(difference_between_motor_distances) < (distance_to_move * 2.0f))
+
+	// Loop until robot has moved the distance specified
+	// Loops until the sum of the distances moved by both motors is equal to or greater than
+	// the set distance to move multiplied by two since the sum of the two wheels is taken.
+    do 
 	{
 		// Get left wheel distance moved whilst turning robot
-		distance_moved_left = get_distance_travelled_left() - initial_distance_moved_left;
+		distance_moved_left = my_motors.get_distance_travelled_left() - initial_distance_moved_left;
 
 		// Get right wheel distance moved whilst turning robot
-		distance_moved_right = get_distance_travelled_right() - initial_distance_moved_right;
+		distance_moved_right = my_motors.get_distance_travelled_right() - initial_distance_moved_right;
 
-		// Get difference between both motors
+		// Get sum/difference between both motors
 		difference_between_motor_distances = distance_moved_left + distance_moved_right;
 
 		// Delay to ensure polling of interrupt is not backlogged
 		wait_us(100);
-	}
+
+		if (fabs(difference_between_motor_distances) >= (distance_to_move * 2.0f))
+		{
+			reached_distance = true;
+		}
+		loop_count++;
+		
+
+	} while (!reached_distance);
+
+	Serial.println(loop_count);
+
+	// // Loop until robot has moved the distance specified
+	// // Loops until the sum of the distances moved by both motors is equal to or greater than
+	// // the set distance to move multiplied by two since the sum of the two wheels is taken.
+    // while (fabs(difference_between_motor_distances) < (distance_to_move * 2.0f))
+	// {
+	// 	// Get left wheel distance moved whilst turning robot
+	// 	distance_moved_left = my_motors.get_distance_travelled_left() - initial_distance_moved_left;
+
+	// 	// Get right wheel distance moved whilst turning robot
+	// 	distance_moved_right = my_motors.get_distance_travelled_right() - initial_distance_moved_right;
+
+	// 	// Get sum/difference between both motors
+	// 	difference_between_motor_distances = distance_moved_left + distance_moved_right;
+
+	// 	// Delay to ensure polling of interrupt is not backlogged
+	// 	wait_us(100);
+	// }
 
     // Stop robot moving and reset direction to forwards
 	my_motors.stop_driving();
@@ -336,8 +444,8 @@ void Robot::rotate_robot(int degrees)
 	}
 
 	// Calculate current distance the robot has moved before the robot starts turning the set amount
-	initial_distance_moved_left = get_distance_travelled_left();
-	initial_distance_moved_right = get_distance_travelled_right();
+	initial_distance_moved_left = my_motors.get_distance_travelled_left();
+	initial_distance_moved_right = my_motors.get_distance_travelled_right();
 
 	// Calculate equivalent arc of circle
 	// Left wheel 80mm out from centre
@@ -348,20 +456,20 @@ void Robot::rotate_robot(int degrees)
 
 	// Start robot moving
 	my_motors.set_speed(DEFAULT_ROBOT_SPEED);
-	my_motors.drive_forwards(0);
+	my_motors.drive(0);
 
 	// While distance moved < arc length
 	// loop
 	// Get distance moved by wheels
 	// (distance moved could be an average of the two wheels)
 	// delay between distance moved polls
-	while (abs(difference_between_motor_distances) < (arc_distance_to_turn * 2.0f))
+	while (fabs(difference_between_motor_distances) < (arc_distance_to_turn * 2.0f))
 	{
 		// Get left wheel distance moved whilst turning robot
-		distance_moved_while_turning_left = get_distance_travelled_left() - initial_distance_moved_left;
+		distance_moved_while_turning_left = my_motors.get_distance_travelled_left() - initial_distance_moved_left;
 
 		// Get right wheel distance moved whilst turning robot
-		distance_moved_while_turning_right = get_distance_travelled_right() - initial_distance_moved_right;
+		distance_moved_while_turning_right = my_motors.get_distance_travelled_right() - initial_distance_moved_right;
 
 		// Get difference between both motors
 		difference_between_motor_distances = distance_moved_while_turning_left - distance_moved_while_turning_right;
@@ -384,14 +492,14 @@ void Robot::calculate_starting_location()
 {
 	float front_sensor_distance = my_sensors.read_averaged_IR_sensor_front(5);
 	float back_sensor_distance = my_sensors.read_averaged_IR_sensor_back(5);
-	int left_sensor_distance = my_sensors.read_averaged_usonic_sensor_left(5);
-	int right_sensor_distance = my_sensors.read_averaged_usonic_sensor_right(5);
+	float left_sensor_distance = my_sensors.read_averaged_usonic_sensor_left(5);
+	float right_sensor_distance = my_sensors.read_averaged_usonic_sensor_right(5);
 
     // Calculate direction robot is facing
     // Assume the robot is facing towards finish from centre of start location
 
     // Set coordinate position based on sensor readings
-    this->current_position.x_coordinate = (float)left_sensor_distance/5.0f;
+    this->current_position.x_coordinate = left_sensor_distance/5.0f;
     this->current_position.y_coordinate = back_sensor_distance/5.0f;
 
     Serial.println(this->current_position.x_coordinate);
@@ -413,54 +521,60 @@ void Robot::centre_on_map_grid()
 {
     float x_distance_to_move = 0.0f;
     float y_distance_to_move = 0.0f;
+	float coordinate_grid_remainder_x = fmod(this->current_position.x_coordinate, 5);
+	float coordinate_grid_remainder_y = fmod(this->current_position.y_coordinate, 5);
 
-    if (fmod(this->current_position.x_coordinate, 5) > 2.5)
+    if (coordinate_grid_remainder_x > 2.5f)
     {
         if (this->bearing == 0)
         {
             this->rotate_robot(90);
-            this->move_robot(-(fmod(this->current_position.x_coordinate, 5)-2.5));
+            this->move_robot(-1.0f * (coordinate_grid_remainder_x - 2.5f));
         }
         else if (this->bearing == 90)
         {
-            this->move_robot(-(fmod(this->current_position.x_coordinate, 5)-2.5));
+            this->move_robot(-1.0f * (coordinate_grid_remainder_x - 2.5f));
         }
     }
-    else if (fmod(this->current_position.x_coordinate, 5) < 2.5)
+    else if (coordinate_grid_remainder_x < 2.5f)
     {
         if (this->bearing == 0)
         {
             this->rotate_robot(90);
-            this->move_robot((fmod(this->current_position.x_coordinate, 5)));
+            this->move_robot(coordinate_grid_remainder_x);
         }
         else if (this->bearing == 90)
         {
-            this->move_robot((fmod(this->current_position.x_coordinate, 5)));
+            this->move_robot(coordinate_grid_remainder_x);
         }
     }
+	else
+	{
+		// In middle of horizontal coordinate, no need to move
+	}
 
-    if (fmod(this->current_position.y_coordinate, 5) > 2.5)
+    if (coordinate_grid_remainder_y > 2.5f)
     {
         if (this->bearing == 0)
         {
-            this->move_robot(-(fmod(this->current_position.y_coordinate, 5)-2.5));
+            this->move_robot(-1.0f * (coordinate_grid_remainder_y - 2.5f));
         }
         else if (this->bearing == 90)
         {
             this->rotate_robot(-90);
-            this->move_robot(-(fmod(this->current_position.y_coordinate, 5)-2.5));
+            this->move_robot(-1.0f * (coordinate_grid_remainder_y - 2.5f));
         }
     }
-    else if (fmod(this->current_position.x_coordinate, 5) < 2.5)
+    else if (coordinate_grid_remainder_y < 2.5f)
     {
         if (this->bearing == 0)
         {
-            this->move_robot((fmod(this->current_position.x_coordinate, 5)));
+            this->move_robot(coordinate_grid_remainder_y);
         }
         else if (this->bearing == 90)
         {
             this->rotate_robot(-90);
-            this->move_robot((fmod(this->current_position.x_coordinate, 5)));
+            this->move_robot(coordinate_grid_remainder_y);
         }
     }
 }
@@ -504,13 +618,13 @@ bool Robot::check_route_ahead(float distance_to_move)
 
 	if (distance_to_move == -1.0f)
 	{
-		if (distance_to_objects_front > MIN_IR_DIST)
+		if (distance_to_objects_front > MIN_IR_DIST_FRONT)
 		{
 			return true;
 		}
 	}
 
-	if (distance_to_objects_front > (distance_to_move + MIN_IR_DIST))
+	if (distance_to_objects_front > (distance_to_move + MIN_IR_DIST_FRONT))
 	{
 		return true;
 	}
@@ -531,7 +645,7 @@ bool Robot::check_side_space_left(int num_readings)
 {
 	int left_sensor_distance = my_sensors.read_averaged_usonic_sensor_left(num_readings);
 	
-	if (left_sensor_distance > MIN_USONIC_DIST)
+	if (left_sensor_distance > MIN_USONIC_DIST+5.0f)
 	{
 		return true;
 	}
@@ -548,7 +662,7 @@ bool Robot::check_side_space_right(int num_readings)
 {
 	int right_sensor_distance = my_sensors.read_averaged_usonic_sensor_right(num_readings);
 
-	if (right_sensor_distance > MIN_USONIC_DIST)
+	if (right_sensor_distance > MIN_USONIC_DIST+5.0f)
 	{
 		return true;
 	}
@@ -556,7 +670,50 @@ bool Robot::check_side_space_right(int num_readings)
 }
 
 
+void Robot::determine_new_distance_moved()
+{
+	float distance_moved_left = 0.0f;
+	float distance_moved_right = 0.0f;
+	float average_distance_moved = 0.0f;
 
+	distance_moved_left = my_motors.get_distance_travelled_left() - initial_distance_moved_left;
+	distance_moved_right = my_motors.get_distance_travelled_right() - initial_distance_moved_right;
+
+	average_distance_moved = (distance_moved_left + distance_moved_right) / 2.0f;
+
+	Serial.println("\nInitial Coordinates");
+	Serial.println("Bearing");
+	Serial.println(bearing);
+	Serial.println("x coordinate");
+	Serial.println(current_position.x_coordinate);
+	Serial.println("y coordinate");
+	Serial.println(current_position.y_coordinate);
+
+	if (bearing == 0) 
+	{
+		current_position.y_coordinate = current_position.y_coordinate + average_distance_moved;
+	}
+	else if (bearing == 90)
+	{
+		current_position.x_coordinate = current_position.x_coordinate + average_distance_moved;
+	}
+	else if (bearing == 180)
+	{
+		current_position.y_coordinate = current_position.y_coordinate - average_distance_moved;
+	}
+	else if (bearing == 270)
+	{
+		current_position.x_coordinate = current_position.x_coordinate - average_distance_moved;
+	}
+
+	Serial.println("\nFinal Coordinates");
+	Serial.println("Bearing");
+	Serial.println(bearing);
+	Serial.println("x coordinate");
+	Serial.println(current_position.x_coordinate);
+	Serial.println("y coordinate");
+	Serial.println(current_position.y_coordinate);
+}
 
 
 
@@ -601,7 +758,7 @@ bool Robot::check_side_space_right(int num_readings)
 
 // 	// Drive the robot forwards
 // 	// 0 seconds means continue forever until told otherwise
-// 	my_motors.drive_forwards(0);
+// 	my_motors.drive(0);
 
 // 	wait_us(1000000);
 
@@ -612,7 +769,7 @@ bool Robot::check_side_space_right(int num_readings)
 
 // 	// Drive the robot forwards
 // 	// 0 seconds means continue forever until told otherwise
-// 	my_motors.drive_forwards(0);
+// 	my_motors.drive(0);
 
 // 	wait_us(1000000);
 

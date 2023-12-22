@@ -6,8 +6,6 @@
 
 #define BAUDRATE 9600 // Baudrate for serial communication
 
-#define MIN_IR_DIST 15.0f // Minimum distance for IR sensor to start detecting objects 
-#define MIN_USONIC_DIST 15 // Minimum distance for USonic sensor to start detecting objects
 
 #define MOTOR_LEFT_DIRECTION P0_4 // Left motor direction pin
 #define MOTOR_RIGHT_DIRECTION P0_5 // Right motor direction pin

@@ -32,8 +32,8 @@ void setup()
 	// Setup for robot that is run once at the very start
 	my_robot.initial_setup();
 
+	// my_robot.current_state = my_robot.STATE_TESTING;
 	my_robot.current_state = my_robot.STATE_SETUP;
-	// my_robot.current_state = my_robot.STATE_SOLVE;
 }
 
 /**
@@ -46,6 +46,9 @@ void loop()
 	{
 		switch (my_robot.current_state)
 		{
+			case my_robot.STATE_TESTING:
+				my_robot.test();
+				break;
 			case my_robot.STATE_SETUP:
 				my_robot.setup();
 				break;

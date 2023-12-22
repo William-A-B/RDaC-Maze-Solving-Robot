@@ -37,10 +37,10 @@ void Sensors::run_IR_sensors()
 {
 	//float infrared_distance[2] = {0};
 	read_IR_data(true);
-	infrared_distance[0] = calculate_infrared_distance(cmd);
+	infrared_distance[0] = calculate_infrared_distance(cmd, true);
 
 	read_IR_data(false);
-	infrared_distance[1] = calculate_infrared_distance(cmd);
+	infrared_distance[1] = calculate_infrared_distance(cmd, false);
 
 	print_IR_data(infrared_distance);
 
@@ -88,7 +88,7 @@ else
 }
 }
 
-int Sensors::read_usonic_data(bool left_sensor)
+float Sensors::read_usonic_data(bool left_sensor)
 {
 	if (left_sensor == true)
 	{
@@ -133,20 +133,30 @@ int Sensors::read_usonic_data(bool left_sensor)
 
 }
 
-float Sensors::calculate_infrared_distance(char cmd[2]) 
+float Sensors::calculate_infrared_distance(char cmd[2], bool front) 
 {
 
 	float distance = 0.0f;
 
 	distance = (cmd[0] * 16 + cmd[1])/16/(float)pow(2,shift_bit);
 
+	if (front == true)
+	{
+		distance = distance + FRONT_SENSOR_OFFSET;
+	}
+	else if (front == false)
+	{
+		distance = distance + REAR_SENSOR_OFFSET;
+	}
+
 	return distance;
 }
 
-int Sensors::calculate_usonic_distance(int usonic_duration)
+float Sensors::calculate_usonic_distance(float usonic_duration)
 {
-	int distance = 0;
+	float distance = 0;
 	distance = usonic_duration / 29 / 2;
+	distance = distance + LEFT_SENSOR_OFFSET;
 	return distance;
 }
 
@@ -160,7 +170,7 @@ void Sensors::print_IR_data(float infrared_distance[2])
 	Serial.println("-------------------------------");
 }
 
-void Sensors::print_usonic_data(int usonic_distance[2])
+void Sensors::print_usonic_data(float usonic_distance[2])
 {
 	Serial.print("Left usonic distance =  ");
 	Serial.print(usonic_distance[0]);
@@ -196,12 +206,12 @@ float Sensors::get_back_IR_distance()
  * 
  * @return int 
  */
-int Sensors::get_left_usonic_distance()
+float Sensors::get_left_usonic_distance()
 {
 	return usonic_distance[0];
 }
 
-int Sensors::get_right_usonic_distance()
+float Sensors::get_right_usonic_distance()
 {
 	return usonic_distance[1];
 }
@@ -212,7 +222,7 @@ float Sensors::read_averaged_IR_sensor_front(int num_sensor_readings)
 	for (int sensor_readings = 0; sensor_readings < num_sensor_readings; sensor_readings++)
 	{
 		read_IR_data(true);
-		this->infrared_distance[0] = calculate_infrared_distance(cmd);
+		this->infrared_distance[0] = calculate_infrared_distance(cmd, true);
 
 		this->average_infared_distance = this->average_infared_distance + this->infrared_distance[0];
 	}
@@ -227,7 +237,7 @@ float Sensors::read_averaged_IR_sensor_back(int num_sensor_readings)
 	for (int sensor_readings = 0; sensor_readings < num_sensor_readings; sensor_readings++)
 	{
 		read_IR_data(false);
-		this->infrared_distance[1] = calculate_infrared_distance(cmd);
+		this->infrared_distance[1] = calculate_infrared_distance(cmd, false);
 
 		this->average_infared_distance = this->average_infared_distance + this->infrared_distance[1];
 	}
@@ -237,7 +247,7 @@ float Sensors::read_averaged_IR_sensor_back(int num_sensor_readings)
 }
 
 
-int Sensors::read_averaged_usonic_sensor_left(int num_sensor_readings)
+float Sensors::read_averaged_usonic_sensor_left(int num_sensor_readings)
 {
 	this->average_usonic_distance = 0;
 	for (int sensor_readings = 0; sensor_readings < num_sensor_readings; sensor_readings++)
@@ -251,7 +261,7 @@ int Sensors::read_averaged_usonic_sensor_left(int num_sensor_readings)
 	return this->average_usonic_distance;
 }
 
-int Sensors::read_averaged_usonic_sensor_right(int num_sensor_readings)
+float Sensors::read_averaged_usonic_sensor_right(int num_sensor_readings)
 {
 	this->average_usonic_distance = 0;
 	for (int sensor_readings = 0; sensor_readings < num_sensor_readings; sensor_readings++)

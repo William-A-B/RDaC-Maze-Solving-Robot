@@ -10,9 +10,13 @@
 #include "errorflag.h"
 
 // Radius of wheels from centre of robot to centre of wheels
-#define ROBOT_WHEEL_RADIUS 80.0f
+#define ROBOT_WHEEL_RADIUS 8.0f
 #define MAX_IR_DISTANCE 63.75
 #define DEFAULT_ROBOT_SPEED 0.75f
+
+#define MIN_IR_DIST_FRONT 22.7f // Minimum distance for IR sensor to start detecting objects
+#define MIN_IR_DIST_REAR 26.3f
+#define MIN_USONIC_DIST 22.75f // Minimum distance for USonic sensor to start detecting objects
 
 
 
@@ -22,6 +26,7 @@ struct robot_position
 	float x_coordinate;
 	float y_coordinate;
 };
+
 
 /**
  * @brief A class to act as a wrapper and contain all functions
@@ -33,6 +38,12 @@ class Robot
 public:
 
 	// FUNCTION DECLARATIONS
+
+	/**
+	 * @brief Function used to test various features. Any code implementation is often temporary
+	 * But may be promoted up to its own function at later use.
+	 */
+	void test();
 
 	/**
 	 * @brief Run once upon powering on the robot.
@@ -57,6 +68,11 @@ public:
 	 * @brief Starts the robot driving forwards at its default speed of 0.5
 	 */
     void drive_forwards();
+
+	/**
+	 * @brief Starts the robot driving backwards at its default speed of 0.5
+	 */
+	void drive_backwards();
 
 	/**
 	 * @brief Stops the robot from moving
@@ -87,6 +103,7 @@ public:
 
     enum robot_state
 	{
+		STATE_TESTING,
 		STATE_SETUP,
 		STATE_LOCATE,
 		STATE_SOLVE,
@@ -153,6 +170,8 @@ private:
     bool check_side_space_right(int num_readings);
 
 
+	void determine_new_distance_moved();
+
 
 	// VARIABLE DECLARATIONS
 
@@ -164,6 +183,13 @@ private:
 		right_usonic
 	};
 
+	enum algorithm
+	{
+		FOLLOW_WALL,
+		DIRECT_AND_AROUND,
+		NAVIGATE_MAP,
+	} algorithm;
+
 	/**
 	 * @brief Integer to represent which objects are within range of the robot
 	 *
@@ -171,11 +197,14 @@ private:
 	unsigned int objects;
 
 	// Bearing of the robot in relation to maze finish location
-	int bearing;
+	// Bearing of zero is "North", and faces directly towards the finish from the starting location
+	int bearing = 0;
 
     // Float coordinate positions for the absolute position of the robot within the maze
     robot_position current_position;
-
+	
+	float initial_distance_moved_left;
+	float initial_distance_moved_right;
 };
 
 

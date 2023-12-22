@@ -60,14 +60,6 @@ void Map::add_obstacles_to_map(int x_pos, int y_pos)
 	if (this->occupancy_grid[x_pos][y_pos] == 0)
 	{
 		this->occupancy_grid[x_pos][y_pos] = 1;
-		this->occupancy_grid[x_pos][y_pos+1] = 1;
-		this->occupancy_grid[x_pos+1][y_pos+1] = 1;
-		this->occupancy_grid[x_pos+1][y_pos] = 1;
-		this->occupancy_grid[x_pos+1][y_pos-1] = 1;
-		this->occupancy_grid[x_pos][y_pos-1] = 1;
-		this->occupancy_grid[x_pos-1][y_pos-1] = 1;
-		this->occupancy_grid[x_pos-1][y_pos] = 1;
-		this->occupancy_grid[x_pos-1][y_pos+1] = 1;
 	}
 	else
 	{
@@ -131,3 +123,41 @@ robot_position_in_map Map::get_position_in_map()
 {
     return this->current_position;
 }
+
+
+
+// void Map::add_obstacles_to_map(int x_pos, int y_pos)
+// {
+// 	// Place an obstacle into the map at the given coordinate.
+// 	// Add a 5cm (1 grid-space) tolerance around all sides
+
+// 	if (x_pos < 0 || x_pos > X_MAX)
+// 	{
+// 		//throw ErrorFlag("x coordinate outside map area", true);
+// 		return;
+// 	}
+// 	else if (y_pos < 0 || y_pos > Y_MAX)
+// 	{
+// 		//throw ErrorFlag("y coordinate outside map area", true);
+// 		return;
+// 	}
+
+
+
+// 	if (this->occupancy_grid[x_pos][y_pos] == 0)
+// 	{
+// 		this->occupancy_grid[x_pos][y_pos] = 1;
+// 		// this->occupancy_grid[x_pos][y_pos+1] = 1;
+// 		// this->occupancy_grid[x_pos+1][y_pos+1] = 1;
+// 		// this->occupancy_grid[x_pos+1][y_pos] = 1;
+// 		// this->occupancy_grid[x_pos+1][y_pos-1] = 1;
+// 		// this->occupancy_grid[x_pos][y_pos-1] = 1;
+// 		// this->occupancy_grid[x_pos-1][y_pos-1] = 1;
+// 		// this->occupancy_grid[x_pos-1][y_pos] = 1;
+// 		// this->occupancy_grid[x_pos-1][y_pos+1] = 1;
+// 	}
+// 	else
+// 	{
+// 		//throw ErrorFlag("Object already in map at this location", false);
+// 	}
+// }
