@@ -1,5 +1,75 @@
 #include "bluetooth.h"
 
+BLEService dataControl("180A");
+
+BLEDevice centralDevice;
+
+// BLE LED Switch Characteristic - custom 128-bit UUID, read and writable by central
+BLEByteCharacteristic directionCharacteristic("1337", BLERead | BLEWrite);
+
+
+bool Bluetooth::initialise_ble()
+{
+    // begin initialization
+    if (!BLE.begin())
+    {
+        Serial.println("Could not start BLE!");
+
+        return false;
+    }
+
+    // set advertised local name and service UUID:
+    BLE.setLocalName(DEVICE_NAME);
+    BLE.setAdvertisedService(dataControl);
+
+    // add the characteristic to the service
+    dataControl.addCharacteristic(directionCharacteristic);
+
+    // add service
+    BLE.addService(dataControl);
+
+    // set the initial value for the characteristic:
+    directionCharacteristic.writeValue(0);
+
+    // start advertising
+    BLE.advertise();
+
+    Serial.println("Started BLE Robot");
+
+    while (centralDevice == false)
+    {
+        // listen for BLE peripherals to connect:
+        centralDevice = BLE.central();
+        Serial.println("Searching for devices to connect");
+        wait_us(10);
+    }
+
+    if (centralDevice == true)
+    {
+        return true;
+    }
+    else 
+    {
+        return false;
+    }
+
+}
+
+void Bluetooth::listenForPeripherals()
+{
+    // listen for BLE peripherals to connect:
+    centralDevice = BLE.central();
+}
+
+void Bluetooth::writeNumber(int number)
+{
+    directionCharacteristic.writeValue(number);
+    directionCharacteristic.written();
+
+}
+
+
+
 
 // BLEService motorControl();
 
@@ -21,13 +91,6 @@
 // }
 
 
-
-
-
-
-
-
-// #include <ArduinoBLE.h>
 
 // BLEService ledService("19B10000-E8F2-537E-4F6C-D104768A1214"); // Bluetooth® Low Energy LED Service
 

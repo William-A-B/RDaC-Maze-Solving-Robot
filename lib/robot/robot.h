@@ -8,6 +8,7 @@
 #include "sensors.h"
 #include "map.h"
 #include "errorflag.h"
+#include "bluetooth.h"
 
 // Radius of wheels from centre of robot to centre of wheels
 #define ROBOT_WHEEL_RADIUS 8.0f
@@ -23,8 +24,8 @@
 struct robot_position
 {
 	// Float coordinate positions for the absolute position of the robot within the maze
-	float x_coordinate;
-	float y_coordinate;
+	float xCoordinate;
+	float yCoordinate;
 };
 
 
@@ -49,7 +50,7 @@ public:
 	 * @brief Run once upon powering on the robot.
 	 * Sets up sections of robot which only ever need to be set once
 	 */
-    void initial_setup();
+    void initialSetup();
 
 	/**
 	 * @brief Run once the robot is placed at the starting position in the maze
@@ -62,22 +63,22 @@ public:
 	 * Runs all algorithms for solving and mapping from this function
 	 * Part of state SOLVE within the state machine
 	 */
-	void solve_maze();
+	void solveMaze();
 
 	/**
 	 * @brief Starts the robot driving forwards at its default speed of 0.5
 	 */
-    void drive_forwards();
+    void driveForwards();
 
 	/**
 	 * @brief Starts the robot driving backwards at its default speed of 0.5
 	 */
-	void drive_backwards();
+	void driveBackwards();
 
 	/**
 	 * @brief Stops the robot from moving
 	 */
-	void stop_moving();
+	void stopMoving();
 
 	/**
 	 * @brief Ends all processes on the robot and stops the state machine
@@ -87,16 +88,16 @@ public:
 	/**
 	 * @brief Moves the robot a given distance, if the value given is negative the robot will move backwards
 	 * 
-	 * @param distance_to_move 	The number of cm to move the robot
+	 * @param distanceToMove 	The number of cm to move the robot
 	 */
-    void move_robot(float distance_to_move);
+    void moveRobot(float distanceToMove);
 
     /**
      * @brief Rotates the robot about a point a set number of degrees
      *
      * @param degrees 	The number of degrees to rotate, positive = clockwise direction, negative = anticlockwise
      */
-    void rotate_robot(int degrees);
+    void rotateRobot(int degrees);
 
 
     // VARIABLE DECLARATIONS
@@ -113,8 +114,10 @@ public:
 		STATE_LEFT,
 		STATE_RIGHT,
 		STATE_END,
-	} current_state;
+	} currentState;
 
+
+	bool driveForwardsStarted = false;
 private:
 
 	// FUNCTION DECLARATIONS
@@ -124,34 +127,34 @@ private:
 	 * Checks surrounding areas based on sensors
 	 * And sets the coordinate values based on the sensors
 	 */
-	void calculate_starting_location();
+	void calculateStartingLocation();
 
 	/**
  	* @brief Inserts the starting location into the occupancy grid
  	*/
-	void initialise_starting_location_in_map();
+	void initialiseStartingLocationInMap();
 
 	/**
 	 * @brief Centres the robot in the middle of the occupancy grid square
 	 */
-    void centre_on_map_grid();
+    void centreOnMapGrid();
 
 	/**
 	 * @brief Updates the robots bearing to identify the direction in which the robot is currently heading
 	 * 
-	 * @param angle_to_add 	The angle in which the robot is currently turning by
+	 * @param angleToAdd 	The angle in which the robot is currently turning by
 	 */
-	void update_bearing(int angle_to_add);
+	void updateBearing(int angleToAdd);
 
 	/**
 	 * @brief Checks the space in front of the robot to see if there is free space or not
 	 * Decides whether the robot is able to move forwards the specified distance
 	 * 
-	 * @param distance_to_move 	The distance to check whether the robot can move forwards
+	 * @param distanceToMove 	The distance to check whether the robot can move forwards
 	 * @return true 			True if the robot is allowed to move forwards
 	 * @return false 			False if there is an object in the way and the robot can't move forwards
 	 */
-	bool check_route_ahead(float distance_to_move);
+	bool checkRouteAhead(float distanceToMove);
 
 	/**
 	 * @brief Checks if there is free space to move into on the left of the robot
@@ -159,7 +162,7 @@ private:
 	 * @return true 	True if the robot can turn left and move forwards
 	 * @return false 	False if the robot cannot move left and something is blocking it
 	 */
-	bool check_side_space_left(int num_readings);
+	bool checkSideSpaceLeft(int numReadings);
 
 	/**
 	 * @brief Checks if there is free space to move into on the right of the robot
@@ -167,10 +170,10 @@ private:
 	 * @return true 	True if the robot can turn right and move forwards
 	 * @return false 	False if the robot cannot move left and something is blocking it
 	 */
-    bool check_side_space_right(int num_readings);
+    bool checkSideSpaceRight(int numReadings);
 
 
-	void determine_new_distance_moved();
+	void determineNewDistanceMoved();
 
 
 	// VARIABLE DECLARATIONS
@@ -201,10 +204,12 @@ private:
 	int bearing = 0;
 
     // Float coordinate positions for the absolute position of the robot within the maze
-    robot_position current_position;
+    robot_position currentPosition;
+
+	float initialDistanceMovedLeft;
+	float initialDistanceMovedRight;
+
 	
-	float initial_distance_moved_left;
-	float initial_distance_moved_right;
 };
 
 

@@ -167,19 +167,19 @@ void Motor::count_pulse_left()
 {
     if (encoder_left_in != encoder_left_in_secondary)
     {
-        distance_travelled_left = distance_travelled_left + 0.046125f;
-        if (enc_count_A % 329)
-        {
-            wheel_rotations_left++;
-        }
+        distance_travelled_left = distance_travelled_left + LEFT_ENCODER_DISTANCE;
+        // if (enc_count_A % 329)
+        // {
+        //     wheel_rotations_left++;
+        // }
     }
     else
     {
-        distance_travelled_left = distance_travelled_left - 0.046125f;
-        if (enc_count_A % 329)
-        {
-            wheel_rotations_left--;
-        }
+        distance_travelled_left = distance_travelled_left - LEFT_ENCODER_DISTANCE;
+        // if (enc_count_A % 329)
+        // {
+        //     wheel_rotations_left--;
+        // }
     }
     //distance_travelled_left = distance_travelled_left + 0.435;
     enc_count_A++;
@@ -189,7 +189,7 @@ void Motor::count_pulse_right()
 {
     if (encoder_right_in != encoder_right_in_secondary)
     {
-        distance_travelled_right = distance_travelled_right - 0.01722f;
+        distance_travelled_right = distance_travelled_right - RIGHT_ENCODER_DISTANCE;
         if (enc_count_B % 865)
         {
             wheel_rotations_right++;
@@ -197,7 +197,7 @@ void Motor::count_pulse_right()
     }
     else
     {
-        distance_travelled_right = distance_travelled_right + 0.01722f;
+        distance_travelled_right = distance_travelled_right + RIGHT_ENCODER_DISTANCE;
         if (enc_count_B % 865)
         {
             wheel_rotations_right--;

@@ -9,12 +9,12 @@
 #define Y_MAX 44
 
 
-struct robot_position_in_map
+struct RobotPositionInMap
 {
     // Robot y position in occupancy grid
-    int y_coordinate;
+    int yCoordinate;
     // Robot x position in occupancy grid
-    int x_coordinate;
+    int xCoordinate;
 };
 
 class Map
@@ -25,30 +25,30 @@ public:
     /**
      * @brief Construct a new Map object
      * 
-     * @param x_coordinate Robot x starting position in map
-     * @param y_coordinate Robot y starting position in map
+     * @param xCoordinate Robot x starting position in map
+     * @param yCoordinate Robot y starting position in map
      */
-    Map(int x_coordinate, int y_coordinate);
+    Map(int xCoordinate, int yCoordinate);
 
     // FUNCTION DEFINITIONS
     /**
 	 * @brief Setup the occupancy grid
 	 *
 	 */
-	void setup_occupancy_grid();
+	void setupOccupancyGrid();
 
-    void add_obstacles_to_map(int x_coordinate, int y_coordinate);
+    void addObstaclesToMap(int xCoordinate, int yCoordinate);
 
     /**
 	 * @brief Prints the occupancy map to the serial port
 	 * and displays the occupancy map in a readable format
 	 *
 	 */
-	void display_map();
+	void displayMap();
 
-    void set_robot_location(int x_coordinate, int y_coordinate);
+    void setRobotLocation(int xCoordinate, int yCoordinate);
 
-    bool check_route_ahead_in_map(int bearing_heading, int distance_to_move);
+    bool checkRouteAheadInMap(int bearing_heading, int distance_to_move);
 
 
 
@@ -62,7 +62,7 @@ private:
 
     // VARIABLE DEFINITIONS
 
-    robot_position_in_map current_position;
+    RobotPositionInMap currentPosition;
     
 
     /**
@@ -70,10 +70,10 @@ private:
 	 * Set to 5cm per grid/index giving the maze a total size of approximately 220cm by 160cm
 	 *
 	 */
-	bool occupancy_grid[32][44] = {0};
+	bool occupancyGrid[32][44] = {0};
 
 public:
-    robot_position_in_map get_position_in_map();
+    RobotPositionInMap getPositionInMap();
 
 
 };

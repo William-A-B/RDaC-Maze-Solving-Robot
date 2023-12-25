@@ -7,7 +7,17 @@
 
 //#define MOTORSHIFT 0.515f // Motor calibration constant to correct speed of motors for a speed of 0.5f
 
-#define MOTORSHIFT 0.48f // Motor calibration constant to correct speed of motors for a speed on 0.75f
+// 0.48f - Move in straight line value
+#define MOTORSHIFT 0.4740f // Motor calibration constant to correct speed of motors for a speed on 0.75f
+
+// Correct value to give equal encoder distances for the values of
+// left = 0.046125f
+// right = 0.01722f
+//#define MOTORSHIFT 0.4400030f 
+
+#define LEFT_ENCODER_DISTANCE 0.046125f
+#define RIGHT_ENCODER_DISTANCE 0.01694f
+
 
 // Radius of the wheels - 48.5mm or 4.85cm
 #define WHEEL_DIAMETER 48.5

@@ -6,7 +6,7 @@
 #include <Arduino.h>
 #include <mbed/mbed.h>
 #include <events/mbed_events.h>
-#include "ble/BLE.h"
+// #include "ble/BLE.h"
 #include "pindef.h"
 #include "joystick.h"
 #include "robot.h"
@@ -30,10 +30,10 @@ void setup()
 	Joystick_setup();
 
 	// Setup for robot that is run once at the very start
-	my_robot.initial_setup();
+	my_robot.initialSetup();
 
-	// my_robot.current_state = my_robot.STATE_TESTING;
-	my_robot.current_state = my_robot.STATE_SETUP;
+	// my_robot.currentState = my_robot.STATE_TESTING;
+	my_robot.currentState = my_robot.STATE_SETUP;
 }
 
 /**
@@ -44,7 +44,7 @@ void loop()
 {
 	if (my_joystick.check_button_press() == 3)
 	{
-		switch (my_robot.current_state)
+		switch (my_robot.currentState)
 		{
 			case my_robot.STATE_TESTING:
 				my_robot.test();
@@ -55,21 +55,21 @@ void loop()
 			case my_robot.STATE_LOCATE:
 				break;
 			case my_robot.STATE_SOLVE:
-				my_robot.solve_maze();
+				my_robot.solveMaze();
 				break;
 			case my_robot.STATE_STOP:
-				my_robot.stop_moving();
+				my_robot.stopMoving();
 				break;
 			case my_robot.STATE_FORWARD:
-				my_robot.drive_forwards();
+				my_robot.driveForwards();
 				break;
 			case my_robot.STATE_BACKWARD:
 				break;
 			case my_robot.STATE_LEFT:
-				my_robot.rotate_robot(-90);
+				my_robot.rotateRobot(-90);
 				break;
 			case my_robot.STATE_RIGHT:
-				my_robot.rotate_robot(90);
+				my_robot.rotateRobot(90);
 				break;
 			case my_robot.STATE_END:
 				set_button_state(0);
@@ -84,7 +84,7 @@ void loop()
 
 
 	// // If the robot is set to continue running keep on checking the joystick button presses
-	// // Else stop_moving the robot from moving
+	// // Else stopMoving the robot from moving
 	// if (continue_running == true)
 	// {
 	// 	// Forwards direction pressed on Joystick --> Run
@@ -96,13 +96,13 @@ void loop()
 	// 	// Backwards direction pressed on Joystick --> Stop
 	// 	else if (my_joystick.check_button_press() == 2)
 	// 	{
-	// 		my_robot.stop_moving();
+	// 		my_robot.stopMoving();
 	// 	}
 	// }
 	// else
 	// {
 	// 	set_button_state(0);
-	// 	my_robot.stop_moving();
+	// 	my_robot.stopMoving();
 	// }
 }
 
