@@ -24,6 +24,11 @@ public:
     bool initialise_ble();
     void listenForPeripherals();
     void writeNumber(int number);
+    void ledControl();
+    void updateRobotLocationInfo(int bearing, float xCoordinate, float yCoordinate);
+    bool isConnected();
+    void pollBLE();
+    bool isClientConnected();
 
 
 private:

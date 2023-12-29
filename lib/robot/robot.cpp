@@ -91,14 +91,41 @@ void Robot::initialSetup()
 	if (robotBLE.initialise_ble() == true)
 	{
 		Serial.println("Bluetooth initialised and successfully connected to Central");
+		robotBLE.pollBLE();
+		//robotBLE.ledControl();
 	}
 	else
 	{
 		Serial.println("Bluetooth failed and could not connect to Central");
 	}
 
-	
 
+	int i = 0;
+	float j = 0.0f;
+	float k = 0.0f;
+	while (robotBLE.isClientConnected() == false)
+	{
+		Serial.println("Updating Numbers");
+		Serial.println("Bearing: ");
+		Serial.println(i);
+		Serial.println("X Coordinate: ");
+		Serial.println(j);
+		Serial.println("Y Coordinate: ");
+		Serial.println(k);
+
+		robotBLE.updateRobotLocationInfo(i, j, k);
+
+		i++;
+		j = j + 1.0f;
+		k = k + 1.0f;
+
+		robotBLE.pollBLE();
+
+		wait_us(300000);
+
+	}
+
+	Serial.println("Client Connected to Robot, loop finished");
 
 
 	// Initialize digital pin LED_BUILTIN as an output.
@@ -118,6 +145,18 @@ void Robot::initialSetup()
  */
 void Robot::setup()
 {
+	while (robotBLE.isConnected() == false)
+	{
+		Serial.println("Not Connected, waiting to connect");
+		wait_us(1000);
+	}
+
+	Serial.println("Connected");
+
+	
+
+
+
 	this->calculateStartingLocation();
 	this->initialiseStartingLocationInMap();
     this->centreOnMapGrid();
@@ -180,6 +219,8 @@ void Robot::solveMaze()
 				driveForwardsStarted = true;
 			}
 			
+			robotBLE.updateRobotLocationInfo(1, 1.0f, 1.0f);
+
 			digitalWrite(LEDG, LOW);
 			digitalWrite(LEDR, HIGH);
 			digitalWrite(LEDB, HIGH);
@@ -769,6 +810,7 @@ void Robot::determineNewDistanceMoved()
 	Serial.println(currentPosition.xCoordinate);
 	Serial.println("y coordinate");
 	Serial.println(currentPosition.yCoordinate);
+	robotBLE.updateRobotLocationInfo(bearing, currentPosition.xCoordinate, currentPosition.yCoordinate);
 }
 
 
