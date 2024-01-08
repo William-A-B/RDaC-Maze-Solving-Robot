@@ -98,8 +98,17 @@ public:
      * @brief Rotates the robot about a point a set number of degrees
      *
      * @param degrees 	The number of degrees to rotate, positive = clockwise direction, negative = anticlockwise
+	 * 
      */
     void rotateRobot(int degrees);
+
+	/**
+     * @brief Rotates the robot about a point a set number of degrees
+     *
+     * @param degrees 	The number of degrees to rotate, positive = clockwise direction, negative = anticlockwise
+	 * 
+     */
+    void rotateRobot(int degrees, bool ignoreBearingUpdate);
 
 
     // VARIABLE DECLARATIONS
@@ -133,6 +142,21 @@ private:
 	Bluetooth robotBLE;
 
 	// FUNCTION DECLARATIONS
+
+	/**
+	 * @brief Runs the algorithm for the robot to solve the maze via moving
+	 * directly forwards until it reaches an obstacle then it turns into the
+	 * next free direction and repeats
+	 */
+	void runDirectAlgorithm();
+
+	/**
+	 * @brief Runs the algorithm for the robot to solve the maze via following
+	 * the left hand wall until it reaches the end.
+	 */
+	void runWallFollowingAlgorithm();
+
+	void moveHelper();
 
 	/**
 	 * @brief Calculates the starting position of the robot
@@ -181,6 +205,10 @@ private:
 
 
 	void updateCoordinateLocation();
+
+	void correctOrientation();
+
+	void correctOrientationHelper(float a, float b, float aC);
 
 
 	// VARIABLE DECLARATIONS

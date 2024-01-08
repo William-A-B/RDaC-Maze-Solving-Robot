@@ -78,6 +78,49 @@ void Map::addObstaclesToMap(float frontSensorDistance, float backSensorDistance,
 		if (rightSensorDistance >= 0)
 			occupancyGrid[rPosX + objRelPos_r][rPosY] = 1;
 	}
+	else if (robotBearing == 90)
+	{
+		if (frontSensorDistance >= 0)
+			occupancyGrid[rPosX + objRelPos_f][rPosY] = 1;
+
+		if (backSensorDistance >= 0)
+			occupancyGrid[rPosX - objRelPos_b][rPosY] = 1;
+		
+		if (leftSensorDistance >= 0)
+			occupancyGrid[rPosX][rPosY + objRelPos_l] = 1;
+
+		if (rightSensorDistance >= 0)
+			occupancyGrid[rPosX][rPosY - objRelPos_r] = 1;
+	}
+	else if (robotBearing == 180)
+	{
+		if (frontSensorDistance >= 0)
+			occupancyGrid[rPosX][rPosY - objRelPos_f] = 1;
+
+		if (backSensorDistance >= 0)
+			occupancyGrid[rPosX][rPosY + objRelPos_b] = 1;
+		
+		if (leftSensorDistance >= 0)
+			occupancyGrid[rPosX + objRelPos_l][rPosY] = 1;
+
+		if (rightSensorDistance >= 0)
+			occupancyGrid[rPosX - objRelPos_r][rPosY] = 1;
+	}
+	else if (robotBearing == 270)
+	{
+		if (frontSensorDistance >= 0)
+			occupancyGrid[rPosX - objRelPos_f][rPosY] = 1;
+
+		if (backSensorDistance >= 0)
+			occupancyGrid[rPosX + objRelPos_b][rPosY] = 1;
+		
+		if (leftSensorDistance >= 0)
+			occupancyGrid[rPosX][rPosY - objRelPos_l] = 1;
+
+		if (rightSensorDistance >= 0)
+			occupancyGrid[rPosX][rPosY + objRelPos_r] = 1;
+	}
+
 
 	// Place an obstacle into the map at the given coordinate.
 	// Add a 5cm (1 grid-space) tolerance around all sides
@@ -113,7 +156,7 @@ void Map::updateRobotPosition(float robotXCoord, float robotYCoord)
 	robotPositionHistory[robotHistoryCount].xGridSquare = robotCurrentPosition.xGridSquare;
 	robotPositionHistory[robotHistoryCount].yGridSquare = robotCurrentPosition.yGridSquare;
 
-	occupancyGrid[robotCurrentPosition.xGridSquare][robotCurrentPosition.yGridSquare] = 2;
+	occupancyGrid[robotCurrentPosition.xGridSquare+1][robotCurrentPosition.yGridSquare+1] = 2;
 
 	robotHistoryCount++;
 
