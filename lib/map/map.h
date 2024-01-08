@@ -5,16 +5,23 @@
 #include <mbed/mbed.h>
 #include "errorflag.h"
 
-#define X_MAX 32
-#define Y_MAX 44
+// Default Maze Size
+// #define MAP_WIDTH_X 32
+// #define MAP_HEIGHT_Y 44
+
+// Reduced Maze Size
+// 100cm width
+// 130cm height
+#define MAP_WIDTH_X 22
+#define MAP_HEIGHT_Y 28
 
 
-struct RobotPositionInMap
+struct RobotPosition
 {
     // Robot y position in occupancy grid
-    int yCoordinate;
+    int yGridSquare;
     // Robot x position in occupancy grid
-    int xCoordinate;
+    int xGridSquare;
 };
 
 class Map
@@ -22,22 +29,28 @@ class Map
 
 public:
     // CONSTRUCTOR
-    /**
-     * @brief Construct a new Map object
-     * 
-     * @param xCoordinate Robot x starting position in map
-     * @param yCoordinate Robot y starting position in map
-     */
-    Map(int xCoordinate, int yCoordinate);
+    
+    Map();
 
     // FUNCTION DEFINITIONS
+
+    /**
+     * @brief Initial setup for the map.
+     * 
+     * @param xGridSquareInitial Initialise x grid square to a value
+     * @param yGridSquareInitial Initialise y grid square to a value
+     */
+    void initialSetup(int xGridSquareInitial, int yGridSquareInitial);
+
     /**
 	 * @brief Setup the occupancy grid
 	 *
 	 */
 	void setupOccupancyGrid();
 
-    void addObstaclesToMap(int xCoordinate, int yCoordinate);
+    void addObstaclesToMap(float frontSensorDistance, float backSensorDistance, float leftSensorDistance, float rightSensorDistance, int robotBearing);
+
+    void updateRobotPosition(float robotXCoord, float robotYCoord);
 
     /**
 	 * @brief Prints the occupancy map to the serial port
@@ -46,7 +59,7 @@ public:
 	 */
 	void displayMap();
 
-    void setRobotLocation(int xCoordinate, int yCoordinate);
+    void displayRobotHistory();
 
     bool checkRouteAheadInMap(int bearing_heading, int distance_to_move);
 
@@ -62,7 +75,7 @@ private:
 
     // VARIABLE DEFINITIONS
 
-    RobotPositionInMap currentPosition;
+    RobotPosition robotCurrentPosition;
     
 
     /**
@@ -70,10 +83,16 @@ private:
 	 * Set to 5cm per grid/index giving the maze a total size of approximately 220cm by 160cm
 	 *
 	 */
-	bool occupancyGrid[32][44] = {0};
+	int occupancyGrid[MAP_WIDTH_X][MAP_HEIGHT_Y] = {0};
+
+    RobotPosition robotPositionHistory[100];
+
+    int robotHistoryCount;
+
+
 
 public:
-    RobotPositionInMap getPositionInMap();
+    RobotPosition getPositionInMap();
 
 
 };

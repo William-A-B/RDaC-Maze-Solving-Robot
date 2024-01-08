@@ -12,16 +12,13 @@
 #define Y_COORD_DESCRIPTOR_UUID "804078f6-327d-4865-8d45-13b7ffb5aad0"
 
 #define CLIENT_CONNECTION_CHARACTERISTIC_UUID "6fac34fe-e59e-4086-8491-127ee0139b13"
+#define SENDING_DATA_CHARACTERSITIC_UUID "a0bfd99b-b5f8-408f-84b7-7eca39ff597e"
+#define PING_CHARACTERISTIC_UUID "3bc8597f-ed9e-496c-ab61-437965a0cca2"
 
 BLEDevice centralDevice;
 
-BLEService ledService("180A");
 BLEService robotLocationInfoService(ROBOT_LOCATION_INFO_SERVICE_UUID);
-BLEService clientConnectedService(CLIENT_CONNECTION_SERVICE_UUID);
-
-// BLE LED Switch Characteristic - custom 128-bit UUID, read and writable by central
-// BLEByteCharacteristic directionCharacteristic("1337", BLERead | BLEWrite);
-BLEByteCharacteristic directionCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
+BLEService clientStatusService(CLIENT_CONNECTION_SERVICE_UUID);
 
 BLEIntCharacteristic bearingCharacteristic(BEARING_CHARACTERISTIC_UUID, BLERead | BLENotify);
 BLEFloatCharacteristic xCoordinateCharacteristic(X_COORD_CHARACTERISTIC_UUID, BLERead | BLENotify);
@@ -32,8 +29,8 @@ BLEDescriptor xCoordinateDescriptor(X_COORD_DESCRIPTOR_UUID, "Robot X Position")
 BLEDescriptor yCoordinateDescriptor(Y_COORD_DESCRIPTOR_UUID, "Robot Y Position");
 
 BLEByteCharacteristic clientConnectedCharacteristic(CLIENT_CONNECTION_CHARACTERISTIC_UUID, BLERead | BLEWrite);
-
-// BLEDescriptor ledDescriptor("8888", "led");
+BLEByteCharacteristic sendingDataCharacteristic(SENDING_DATA_CHARACTERSITIC_UUID, BLERead | BLENotify);
+BLEByteCharacteristic pingCharacteristic(PING_CHARACTERISTIC_UUID, BLERead | BLENotify);
 
 
 bool Bluetooth::initialise_ble()
@@ -46,121 +43,88 @@ bool Bluetooth::initialise_ble()
         return false;
     }
 
-    // set advertised local name and service UUID:
+    // Set advertised local name and service UUID:
     BLE.setLocalName(DEVICE_NAME);
-    BLE.setAdvertisedService(ledService);
+    BLE.setAdvertisedService(clientStatusService);
 
-    // directionCharacteristic.addDescriptor(ledDescriptor);
+    // Add the descriptors for each of the robot location characteristics
     bearingCharacteristic.addDescriptor(bearingDescriptor);
     xCoordinateCharacteristic.addDescriptor(xCoordinateDescriptor);
     yCoordinateCharacteristic.addDescriptor(yCoordinateDescriptor);
 
-    // add the characteristic to the service
-    ledService.addCharacteristic(directionCharacteristic);
-
+    // Add the robot location characteristics to the robot location service
     robotLocationInfoService.addCharacteristic(bearingCharacteristic);
     robotLocationInfoService.addCharacteristic(xCoordinateCharacteristic);
     robotLocationInfoService.addCharacteristic(yCoordinateCharacteristic);
 
-    clientConnectedService.addCharacteristic(clientConnectedCharacteristic);
+    // Add the client status characteristics to the client status service
+    clientStatusService.addCharacteristic(clientConnectedCharacteristic);
+    clientStatusService.addCharacteristic(sendingDataCharacteristic);
+    clientStatusService.addCharacteristic(pingCharacteristic);
 
 
-    // add service
-    BLE.addService(ledService);
+    // Add the services to the BLE
     BLE.addService(robotLocationInfoService);
-    BLE.addService(clientConnectedService);
+    BLE.addService(clientStatusService);
 
-    // set the initial value for the characteristic:
-    directionCharacteristic.writeValue(0);
+    // Set the initial values for the characteristics
     bearingCharacteristic.writeValue(0);
     xCoordinateCharacteristic.writeValue(0.0f);
     yCoordinateCharacteristic.writeValue(0.0f);
     clientConnectedCharacteristic.writeValue(0x0);
+    sendingDataCharacteristic.writeValue(0x0);
+    pingCharacteristic.writeValue(0x0);
 
-    // start advertising
+    Serial.println("Initialised BLE and Services");
+    Serial.println("Advertising BLE");
+
+    // Start advertising
+    // Makes robot discoverable via bluetooth by other devices
     BLE.advertise();
+    
+    // Finished initialisation - return success
+    return true;
+}
 
-    Serial.println("Started BLE Robot");
-
+bool Bluetooth::connectToClient()
+{
     while (centralDevice == false)
     {
-        // listen for BLE peripherals to connect:
+        // Listen for BLE peripherals to connect:
         centralDevice = BLE.central();
         Serial.println("Searching for devices to connect");
-        //wait_us(10);
-        //this->pollBLE();
     }
-
+    
     if (centralDevice == true)
     {
-        return true;
+        Serial.println("Waiting to Connect");
+
+        while (isClientConnected() == false)
+        {
+            pollBLE();
+        }
+
+        Serial.println("Client Connected to Robot, loop finished");
     }
-    else 
+    else
     {
         return false;
     }
 
+    return isClientConnected();
 }
 
-void Bluetooth::listenForPeripherals()
+bool Bluetooth::disconnectFromClient()
 {
-    // listen for BLE peripherals to connect:
-    centralDevice = BLE.central();
-}
-
-void Bluetooth::writeNumber(int number)
-{
-    directionCharacteristic.writeValue(number);
-    directionCharacteristic.written();
-
-}
-
-void Bluetooth::updateRobotLocationInfo(int bearing, float xCoordinate, float yCoordinate)
-{
-    bearingCharacteristic.writeValue(bearing);
-    xCoordinateCharacteristic.writeValue(xCoordinate);
-    yCoordinateCharacteristic.writeValue(yCoordinate);
-    this->pollBLE();
-}
-
-void Bluetooth::ledControl()
-{
-    // while the central is still connected to peripheral:
-    while (centralDevice.connected()) {
-        // if the remote device wrote to the characteristic,
-        // use the value to control the LED:
-        if (directionCharacteristic.written()) {
-            switch (directionCharacteristic.value()) {   // any value other than 0
-                case 1:
-                    Serial.println("Forward");
-                    digitalWrite(LED_BUILTIN, HIGH);            // will turn the LED on
-                    break;
-                case 2:
-                    Serial.println("Left");
-                    digitalWrite(LED_BUILTIN, HIGH);         // will turn the LED on
-                    delay(500);
-                    digitalWrite(LED_BUILTIN, LOW);         // will turn the LED off
-                    delay(500);
-                    digitalWrite(LED_BUILTIN, HIGH);      // will turn the LED on
-                    delay(500);
-                    digitalWrite(LED_BUILTIN, LOW);       // will turn the LED off
-                    break;
-                case 3:
-                    Serial.println("Right");
-                    digitalWrite(LED_BUILTIN, HIGH);         // will turn the LED on
-                    delay(1000);
-                    digitalWrite(LED_BUILTIN, LOW);         // will turn the LED off
-                    delay(1000);
-                    digitalWrite(LED_BUILTIN, HIGH);      // will turn the LED on
-                    delay(1000);
-                    digitalWrite(LED_BUILTIN, LOW);       // will turn the LED off
-                    break;
-                default:
-                    Serial.println(F("Stop"));
-                    digitalWrite(LED_BUILTIN, LOW);          // will turn the LED off
-                    break;
-            }
-        }
+    if (BLE.connected())
+    {
+        Serial.println("BLE was connected, now disconnecting");
+        return BLE.disconnect();
+    }
+    else
+    {
+        Serial.println("BLE was not already connected, doing nothing");
+        return false;
     }
 }
 
@@ -171,15 +135,116 @@ bool Bluetooth::isClientConnected()
     return (isClientConnected == 0x01);
 }
 
-bool Bluetooth::isConnected()
+void Bluetooth::updateRobotLocationInfo(int bearing, float xCoordinate, float yCoordinate)
 {
-    return centralDevice.connected();
+    bearingCharacteristic.writeValue(bearing);
+    xCoordinateCharacteristic.writeValue(xCoordinate);
+    yCoordinateCharacteristic.writeValue(yCoordinate);
+    this->pollBLE();
+}
+
+void Bluetooth::disableSendingData()
+{
+    sendingDataCharacteristic.writeValue(0x0);
+}
+
+void Bluetooth::enableSendingData()
+{
+    sendingDataCharacteristic.writeValue(0x01);
+}
+
+void Bluetooth::pingService(byte value)
+{
+    pingCharacteristic.writeValue(value);
 }
 
 void Bluetooth::pollBLE()
 {
     BLE.poll();
 }
+
+
+
+
+
+
+
+// BLEService ledService("180A");
+
+// // BLE LED Switch Characteristic - custom 128-bit UUID, read and writable by central
+// // BLEByteCharacteristic directionCharacteristic("1337", BLERead | BLEWrite);
+// BLEByteCharacteristic directionCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite);
+
+
+// void Bluetooth::writeNumber(int number)
+// {
+//     directionCharacteristic.writeValue(number);
+//     directionCharacteristic.written();
+
+// }
+
+
+// void Bluetooth::ledControl()
+// {
+//     // while the central is still connected to peripheral:
+//     while (centralDevice.connected()) {
+//         // if the remote device wrote to the characteristic,
+//         // use the value to control the LED:
+//         if (directionCharacteristic.written()) {
+//             switch (directionCharacteristic.value()) {   // any value other than 0
+//                 case 1:
+//                     Serial.println("Forward");
+//                     digitalWrite(LED_BUILTIN, HIGH);            // will turn the LED on
+//                     break;
+//                 case 2:
+//                     Serial.println("Left");
+//                     digitalWrite(LED_BUILTIN, HIGH);         // will turn the LED on
+//                     delay(500);
+//                     digitalWrite(LED_BUILTIN, LOW);         // will turn the LED off
+//                     delay(500);
+//                     digitalWrite(LED_BUILTIN, HIGH);      // will turn the LED on
+//                     delay(500);
+//                     digitalWrite(LED_BUILTIN, LOW);       // will turn the LED off
+//                     break;
+//                 case 3:
+//                     Serial.println("Right");
+//                     digitalWrite(LED_BUILTIN, HIGH);         // will turn the LED on
+//                     delay(1000);
+//                     digitalWrite(LED_BUILTIN, LOW);         // will turn the LED off
+//                     delay(1000);
+//                     digitalWrite(LED_BUILTIN, HIGH);      // will turn the LED on
+//                     delay(1000);
+//                     digitalWrite(LED_BUILTIN, LOW);       // will turn the LED off
+//                     break;
+//                 default:
+//                     Serial.println(F("Stop"));
+//                     digitalWrite(LED_BUILTIN, LOW);          // will turn the LED off
+//                     break;
+//             }
+//         }
+//     }
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // BLEService motorControl();

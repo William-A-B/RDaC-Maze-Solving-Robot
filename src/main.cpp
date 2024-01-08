@@ -32,8 +32,8 @@ void setup()
 	// Setup for robot that is run once at the very start
 	my_robot.initialSetup();
 
-	// my_robot.currentState = my_robot.STATE_TESTING;
-	my_robot.currentState = my_robot.STATE_SETUP;
+	my_robot.currentState = my_robot.STATE_TESTING;
+	// my_robot.currentState = my_robot.STATE_SETUP;
 }
 
 /**

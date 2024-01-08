@@ -22,15 +22,23 @@ public:
 
 
     bool initialise_ble();
-    void listenForPeripherals();
-    void writeNumber(int number);
-    void ledControl();
-    void updateRobotLocationInfo(int bearing, float xCoordinate, float yCoordinate);
-    bool isConnected();
-    void pollBLE();
+
+    bool connectToClient();
+
+    bool disconnectFromClient();
+
     bool isClientConnected();
 
+    void updateRobotLocationInfo(int bearing, float xCoordinate, float yCoordinate);
 
+    void disableSendingData();
+
+    void enableSendingData();
+
+    void pingService(byte value);
+
+    void pollBLE();
+    
 private:
 
 

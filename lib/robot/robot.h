@@ -12,13 +12,13 @@
 
 // Radius of wheels from centre of robot to centre of wheels
 #define ROBOT_WHEEL_RADIUS 8.0f
-#define MAX_IR_DISTANCE 63.75
+#define MAX_IR_DISTANCE 71.45f // 63.75 max distance from sensor reference point. 71 from robot centre
+#define MAX_USONIC_DISTANCE 100.0f
 #define DEFAULT_ROBOT_SPEED 0.75f
 
-#define MIN_IR_DIST_FRONT 22.7f // Minimum distance for IR sensor to start detecting objects
-#define MIN_IR_DIST_REAR 26.3f
+#define MIN_IR_DIST_FRONT 16.0f // Minimum distance for IR sensor to start detecting objects
+#define MIN_IR_DIST_REAR 16.0f
 #define MIN_USONIC_DIST 22.75f // Minimum distance for USonic sensor to start detecting objects
-
 
 
 struct robot_position
@@ -45,6 +45,8 @@ public:
 	 * But may be promoted up to its own function at later use.
 	 */
 	void test();
+
+	void processSensorInfo();
 
 	/**
 	 * @brief Run once upon powering on the robot.
@@ -120,6 +122,16 @@ public:
 	bool driveForwardsStarted = false;
 private:
 
+	// Instantiate objects for the other classes
+	Motor myMotors;
+	// Motor left_motor;
+	// Motor right_motor;
+	Sensors mySensors;
+	// Map objects to map the maze
+	Map myMap;
+
+	Bluetooth robotBLE;
+
 	// FUNCTION DECLARATIONS
 
 	/**
@@ -128,11 +140,6 @@ private:
 	 * And sets the coordinate values based on the sensors
 	 */
 	void calculateStartingLocation();
-
-	/**
- 	* @brief Inserts the starting location into the occupancy grid
- 	*/
-	void initialiseStartingLocationInMap();
 
 	/**
 	 * @brief Centres the robot in the middle of the occupancy grid square
@@ -173,7 +180,7 @@ private:
     bool checkSideSpaceRight(int numReadings);
 
 
-	void determineNewDistanceMoved();
+	void updateCoordinateLocation();
 
 
 	// VARIABLE DECLARATIONS

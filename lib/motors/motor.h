@@ -15,8 +15,10 @@
 // right = 0.01722f
 //#define MOTORSHIFT 0.4400030f 
 
-#define LEFT_ENCODER_DISTANCE 0.046125f
+// #define LEFT_ENCODER_DISTANCE 0.046125f
+#define LEFT_ENCODER_DISTANCE 0.047500f
 #define RIGHT_ENCODER_DISTANCE 0.01694f
+
 
 
 // Radius of the wheels - 48.5mm or 4.85cm

@@ -2,10 +2,22 @@
 
 
 
-Map::Map(int xCoordinate, int yCoordinate)
+Map::Map()
 {
-    this->currentPosition.xCoordinate = xCoordinate;
-    this->currentPosition.yCoordinate = yCoordinate;
+	robotCurrentPosition.xGridSquare = 0;
+	robotCurrentPosition.yGridSquare = 0;
+
+	robotHistoryCount = 0;
+
+	// Setup the occupancy grid array to initialise the maze prior to the robot moving
+	setupOccupancyGrid();
+}
+
+void Map::initialSetup(int xGridSquareInitial, int yGridSquareInitial)
+{
+	robotCurrentPosition.xGridSquare = xGridSquareInitial;
+	robotCurrentPosition.yGridSquare = yGridSquareInitial;
+	
 }
 
 /**
@@ -16,57 +28,100 @@ Map::Map(int xCoordinate, int yCoordinate)
 void Map::setupOccupancyGrid()
 {
 	// Set all values in occupancy grid to 0
-	for (int i = 0; i < 32; i++)
+	for (int i = 0; i < MAP_WIDTH_X; i++)
 	{
-		for (int j = 0; j < 44; j++)
+		for (int j = 0; j < MAP_HEIGHT_Y; j++)
 		{
 			this->occupancyGrid[i][j] = 0;
 		}
 	}
 
 	// Set all values in the outer perimeter to 1 to represent the edge of the maze
-	for (int i = 0; i < 32; i++)
+	for (int i = 0; i < MAP_WIDTH_X; i++)
 	{
 		this->occupancyGrid[i][0] = 1;
-		this->occupancyGrid[i][43] = 1;
+		this->occupancyGrid[i][MAP_HEIGHT_Y-1] = 1;
 	}
 
-	for (int i = 0; i < 44; i++)
+	for (int i = 0; i < MAP_HEIGHT_Y; i++)
 	{
 		this->occupancyGrid[0][i] = 1;
-		this->occupancyGrid[31][i] = 1;
+		this->occupancyGrid[MAP_WIDTH_X-1][i] = 1;
 	}
 }
 
 
-void Map::addObstaclesToMap(int xPos, int yPos)
+void Map::addObstaclesToMap(float frontSensorDistance, float backSensorDistance, float leftSensorDistance, float rightSensorDistance, int robotBearing)
 {
+	int objRelPos_f = frontSensorDistance / 5;
+	int objRelPos_b = backSensorDistance / 5;
+	int objRelPos_l = leftSensorDistance / 5;
+	int objRelPos_r = rightSensorDistance / 5;
+
+	// Add 1 to adjust for occupancy grid walls
+	const int rPosX = robotCurrentPosition.xGridSquare + 1;
+	const int rPosY = robotCurrentPosition.yGridSquare + 1;
+
+	// Add other bearing conditions
+	// Make sure object position adding is not outside the array
+	if (robotBearing == 0)
+	{
+		if (frontSensorDistance >= 0)
+			occupancyGrid[rPosX][rPosY + objRelPos_f] = 1;
+
+		if (backSensorDistance >= 0)
+			occupancyGrid[rPosX][rPosY - objRelPos_b] = 1;
+		
+		if (leftSensorDistance >= 0)
+			occupancyGrid[rPosX - objRelPos_l][rPosY] = 1;
+
+		if (rightSensorDistance >= 0)
+			occupancyGrid[rPosX + objRelPos_r][rPosY] = 1;
+	}
+
 	// Place an obstacle into the map at the given coordinate.
 	// Add a 5cm (1 grid-space) tolerance around all sides
 
-	if (xPos < 0 || xPos > X_MAX)
-	{
-		//throw ErrorFlag("x coordinate outside map area", true);
-		return;
-	}
-	else if (yPos < 0 || yPos > Y_MAX)
-	{
-		//throw ErrorFlag("y coordinate outside map area", true);
-		return;
-	}
+	// if (xPos < 0 || xPos > MAP_WIDTH_X)
+	// {
+	// 	//throw ErrorFlag("x coordinate outside map area", true);
+	// 	return;
+	// }
+	// else if (yPos < 0 || yPos > MAP_HEIGHT_Y)
+	// {
+	// 	//throw ErrorFlag("y coordinate outside map area", true);
+	// 	return;
+	// }
 
 
 
-	if (this->occupancyGrid[xPos][yPos] == 0)
-	{
-		this->occupancyGrid[xPos][yPos] = 1;
-	}
-	else
-	{
-		//throw ErrorFlag("Object already in map at this location", false);
-	}
+	// if (this->occupancyGrid[xPos][yPos] == 0)
+	// {
+	// 	this->occupancyGrid[xPos][yPos] = 1;
+	// }
+	// else
+	// {
+	// 	//throw ErrorFlag("Object already in map at this location", false);
+	// }
 }
 
+void Map::updateRobotPosition(float robotXCoord, float robotYCoord)
+{
+	robotCurrentPosition.xGridSquare = robotXCoord / 5;
+	robotCurrentPosition.yGridSquare = robotYCoord / 5;
+
+	robotPositionHistory[robotHistoryCount].xGridSquare = robotCurrentPosition.xGridSquare;
+	robotPositionHistory[robotHistoryCount].yGridSquare = robotCurrentPosition.yGridSquare;
+
+	occupancyGrid[robotCurrentPosition.xGridSquare][robotCurrentPosition.yGridSquare] = 2;
+
+	robotHistoryCount++;
+
+	if (robotHistoryCount >=100)
+	{
+		robotHistoryCount = 0;
+	}
+}
 
 /**
  * @brief Prints the occupancy map to the serial port
@@ -75,9 +130,10 @@ void Map::addObstaclesToMap(int xPos, int yPos)
  */
 void Map::displayMap()
 {
-	for (int y = 0; y < Y_MAX; y++)
+	Serial.println("\n\n\nOCCUPANCY GRID MAP\n");
+	for (int y = MAP_HEIGHT_Y; y >= 0; y--)
 	{
-		for (int x = 0; x < X_MAX; x++)
+		for (int x = 0; x < MAP_WIDTH_X; x++)
 		{
 			Serial.print(this->occupancyGrid[x][y]);
 		}
@@ -85,10 +141,16 @@ void Map::displayMap()
 	}
 }
 
-void Map::setRobotLocation(int xCoordinate, int yCoordinate)
+void Map::displayRobotHistory()
 {
-    this->currentPosition.xCoordinate = xCoordinate;
-    this->currentPosition.yCoordinate = yCoordinate;
+	for (int historyIndex = 0; historyIndex < 100; historyIndex++)
+	{
+		Serial.print((String)"\nRobot Position: "+historyIndex);
+		Serial.print(" --> ");
+		Serial.print(robotPositionHistory[historyIndex].xGridSquare);
+		Serial.print(", ");
+		Serial.print(robotPositionHistory[historyIndex].yGridSquare);
+	}
 }
 
 bool Map::checkRouteAheadInMap(int bearingHeading, int distance_to_move)
@@ -119,9 +181,9 @@ bool Map::checkRouteAheadInMap(int bearingHeading, int distance_to_move)
 }
 
 
-RobotPositionInMap Map::getPositionInMap()
+RobotPosition Map::getPositionInMap()
 {
-    return this->currentPosition;
+    return this->robotCurrentPosition;
 }
 
 

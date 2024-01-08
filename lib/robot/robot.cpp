@@ -1,14 +1,6 @@
 #include "robot.h"
 
-// Instantiate objects for the other classes
-Motor myMotors;
-// Motor left_motor;
-// Motor right_motor;
-Sensors mySensors;
-// Map objects to map the maze
-Map myMap(15, 4);
 
-Bluetooth robotBLE;
 
 /**
  * @brief Function used to test various features. Any code implementation is often temporary
@@ -16,25 +8,40 @@ Bluetooth robotBLE;
  */
 void Robot::test()
 {
-	// Serial.println("\n\nLeft Encoder amount:");
-	// Serial.println(myMotors.get_encoder_revolutions_left());
-	// Serial.println("\nRight Encoder amount:");
-	// Serial.println(myMotors.get_encoder_revolutions_right());
+	// Serial.println(mySensors.read_averaged_IR_sensor_front(1));
 
-	// Serial.println("\n\nLeft Wheel rotations");
-	// Serial.println(myMotors.get_wheel_rotations_left());
-	// Serial.println("\nRight Wheel rotations");
-	// Serial.println(myMotors.get_wheel_rotations_right());
+	// wait_us(100);
 
-	// Serial.println("\n\nDistance moved left wheel");
-	// Serial.println(myMotors.calculate_distance_by_wheel_rotations_left());
-	// Serial.println("\nDistance moved right wheel");
-	// Serial.println(myMotors.calculate_distance_by_wheel_rotations_right());
+	// float initialSensors = mySensors.read_averaged_IR_sensor_front(1);
 
-	Serial.println("\n\nACTUAL DISTANCE LEFT");
-	Serial.println(myMotors.get_distance_travelled_left());
-	Serial.println("\nACTUAL DISTANCE RIGHT");
-	Serial.println(myMotors.get_distance_travelled_right());
+	// Serial.println("\n\nACTUAL DISTANCE LEFT");
+	// Serial.println(myMotors.get_distance_travelled_left());
+	// Serial.println("\nACTUAL DISTANCE RIGHT");
+	// Serial.println(myMotors.get_distance_travelled_right());
+	// Serial.println("\nFront Sensor Distance");
+	// Serial.println(mySensors.read_averaged_IR_sensor_front(1));
+	// Serial.println("Initial Front sensor value");
+	// Serial.println(initialSensors);
+
+
+	// moveRobot(40.0f);
+
+	// float finalSensors = mySensors.read_averaged_IR_sensor_front(1);
+
+	// Serial.println("\n\nACTUAL DISTANCE LEFT");
+	// Serial.println(myMotors.get_distance_travelled_left());
+	// Serial.println("\nACTUAL DISTANCE RIGHT");
+	// Serial.println(myMotors.get_distance_travelled_right());
+	// Serial.println("\nDifference between left - right");
+	// Serial.println(myMotors.get_distance_travelled_left()-myMotors.get_distance_travelled_right());
+	// Serial.println("\nFront Sensor Distance");
+	// Serial.println(mySensors.read_averaged_IR_sensor_front(1));
+	// Serial.println("Final Front sensor value");
+	// Serial.println(finalSensors);
+	// Serial.println("\nDistance Moved According to sensors");
+	// Serial.println(initialSensors - finalSensors);
+
+	
 
 	// long int i = 0;
 	
@@ -51,21 +58,175 @@ void Robot::test()
 	// }
 	// this->stopMoving();
 
-	this->driveForwards();
+	// this->driveForwards();
+
+
+
+
+
+
+
+	
+	// // START
+	// calculateStartingLocation();
+
+	// initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	// initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	// moveRobot(10.0f);
+
+	// updateCoordinateLocation();
+
+	// mySensors.read_averaged_IR_sensor_front(1);
+	// mySensors.read_averaged_IR_sensor_back(1);
+	// mySensors.read_averaged_usonic_sensor_left(1);
+	// mySensors.read_averaged_usonic_sensor_right(1);
+
+
+	// initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	// initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	// moveRobot(10.0f);
+
+	// updateCoordinateLocation();
+
+	// mySensors.read_averaged_IR_sensor_front(1);
+	// mySensors.read_averaged_IR_sensor_back(1);
+	// mySensors.read_averaged_usonic_sensor_left(1);
+	// mySensors.read_averaged_usonic_sensor_right(1);
+
+	// // LEFT 1
+	// rotateRobot(-90);
+
+	// initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	// initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	// moveRobot(20.0f);
+
+	// updateCoordinateLocation();
+
+	// // LEFT 2
+	// rotateRobot(-90);
+
+	// initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	// initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	// moveRobot(20.0f);
+
+	// updateCoordinateLocation();
+
+	// // LEFT 3
+	// rotateRobot(-90);
+
+	// initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	// initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	// moveRobot(20.0f);
+
+	// updateCoordinateLocation();
+
+	// myMap.displayRobotHistory();
+
+
 	
 
-	Serial.println("\n\nACTUAL DISTANCE LEFT");
-	Serial.println(myMotors.get_distance_travelled_left());
-	Serial.println("\nACTUAL DISTANCE RIGHT");
-	Serial.println(myMotors.get_distance_travelled_right());
+	// START
+	calculateStartingLocation();
 
-	Serial.println("\nDifference between left - right");
-	Serial.println(myMotors.get_distance_travelled_left()-myMotors.get_distance_travelled_right());
+	processSensorInfo();
 
-	wait_us(500000);
+	// MOVE 1
+	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	moveRobot(5.0f);
+
+	updateCoordinateLocation();
+
+	processSensorInfo();
+
+	// MOVE 2
+	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	moveRobot(5.0f);
+
+	updateCoordinateLocation();
+
+	processSensorInfo();
+
+	// MOVE 3
+	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	moveRobot(5.0f);
+
+	updateCoordinateLocation();
+
+	processSensorInfo();
+
+	// MOVE 4
+	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	moveRobot(5.0f);
+
+	updateCoordinateLocation();
+
+	processSensorInfo();
+
+	// MOVE 5
+	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	moveRobot(5.0f);
+
+	updateCoordinateLocation();
+
+	processSensorInfo();
+
+	// MOVE 6
+	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
+	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+
+	moveRobot(5.0f);
+
+	updateCoordinateLocation();
+
+	processSensorInfo();
+
+
+	myMap.displayRobotHistory();
+	myMap.displayMap();
+
+	wait_us(10000000);
+
 
 }
 
+void Robot::processSensorInfo()
+{
+	float frontSensorDistance = mySensors.read_averaged_IR_sensor_front(1);
+	float backSensorDistance = mySensors.read_averaged_IR_sensor_back(1);
+	float leftSensorDistance = mySensors.read_averaged_usonic_sensor_left(1);
+	float rightSensorDistance = mySensors.read_averaged_usonic_sensor_right(1);
+
+	if (frontSensorDistance >= MAX_IR_DISTANCE)
+		frontSensorDistance = -1.0f;
+
+	if (backSensorDistance >= MAX_IR_DISTANCE)
+		backSensorDistance = -1.0f;
+	
+	if (leftSensorDistance >= MAX_USONIC_DISTANCE)
+		leftSensorDistance = -1.0f;
+
+	if (rightSensorDistance >= MAX_USONIC_DISTANCE)
+		rightSensorDistance = -1.0f;
+	
+	
+
+	myMap.addObstaclesToMap(frontSensorDistance, backSensorDistance, leftSensorDistance, rightSensorDistance, bearing);
+}
 
 
 /**
@@ -83,49 +244,22 @@ void Robot::initialSetup()
 	// Attach the interrupts for the encoders on the motors
 	myMotors.attach_encoder_interrupts();
 
-	// Setup the occupancy grid array to initialise the maze prior to the robot moving
-	myMap.setupOccupancyGrid();
+	myMap.initialSetup(0, 0);
+
+	// // Setup the occupancy grid array to initialise the maze prior to the robot moving
+	// myMap.setupOccupancyGrid();
 	
 	//my_robot.calculateStartingLocation();
 
 	if (robotBLE.initialise_ble() == true)
 	{
-		Serial.println("Bluetooth initialised and successfully connected to Central");
+		Serial.println("Bluetooth initialised successfully");
 		robotBLE.pollBLE();
-		//robotBLE.ledControl();
 	}
 	else
 	{
-		Serial.println("Bluetooth failed and could not connect to Central");
+		Serial.println("Bluetooth failed and could not initialise");
 	}
-
-
-	int i = 0;
-	float j = 0.0f;
-	float k = 0.0f;
-	while (robotBLE.isClientConnected() == false)
-	{
-		Serial.println("Updating Numbers");
-		Serial.println("Bearing: ");
-		Serial.println(i);
-		Serial.println("X Coordinate: ");
-		Serial.println(j);
-		Serial.println("Y Coordinate: ");
-		Serial.println(k);
-
-		robotBLE.updateRobotLocationInfo(i, j, k);
-
-		i++;
-		j = j + 1.0f;
-		k = k + 1.0f;
-
-		robotBLE.pollBLE();
-
-		wait_us(300000);
-
-	}
-
-	Serial.println("Client Connected to Robot, loop finished");
 
 
 	// Initialize digital pin LED_BUILTIN as an output.
@@ -145,36 +279,35 @@ void Robot::initialSetup()
  */
 void Robot::setup()
 {
-	while (robotBLE.isConnected() == false)
-	{
-		Serial.println("Not Connected, waiting to connect");
-		wait_us(1000);
-	}
+	// while (robotBLE.isClientConnected() == false)
+	// {
+	// 	Serial.println("Not Connected, waiting to connect");
+	// 	wait_us(1000);
+	// }
 
-	Serial.println("Connected");
+	// Serial.println("Connected");
 
 	
 
 
 
 	this->calculateStartingLocation();
-	this->initialiseStartingLocationInMap();
     this->centreOnMapGrid();
 
 
-	if (this->checkSideSpaceLeft(1))
-	{
-		digitalWrite(LEDR, LOW);
-		digitalWrite(LEDG, LOW);
-		digitalWrite(LEDB, LOW);
+	// if (this->checkSideSpaceLeft(1))
+	// {
+	// 	digitalWrite(LEDR, LOW);
+	// 	digitalWrite(LEDG, LOW);
+	// 	digitalWrite(LEDB, LOW);
 
-		this->rotateRobot(-90);
-		while (this->checkRouteAhead(-1))
-		{
-			this->driveForwards();
-		}
-		this->rotateRobot(90);
-	}
+	// 	this->rotateRobot(-90);
+	// 	while (this->checkRouteAhead(-1))
+	// 	{
+	// 		this->driveForwards();
+	// 	}
+	// 	this->rotateRobot(90);
+	// }
 
 	digitalWrite(LEDR, HIGH);
 	digitalWrite(LEDG, HIGH);
@@ -213,13 +346,21 @@ void Robot::solveMaze()
 		{
 			if (driveForwardsStarted == false)
 			{
+				if (robotBLE.connectToClient() == true)
+				{
+					Serial.println("Connected to Client, starting going forwards");
+				}
 				this->driveForwards();
 				initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
 				initialDistanceMovedRight = myMotors.get_distance_travelled_right();
 				driveForwardsStarted = true;
 			}
 			
-			robotBLE.updateRobotLocationInfo(1, 1.0f, 1.0f);
+			if (robotBLE.isClientConnected() == true)
+			{
+				robotBLE.pingService(0x01);
+				Serial.println("Connected - Robot going forwards");
+			}
 
 			digitalWrite(LEDG, LOW);
 			digitalWrite(LEDR, HIGH);
@@ -227,9 +368,18 @@ void Robot::solveMaze()
 		}
 		else
 		{
+
 			this->stopMoving();
 			driveForwardsStarted = false;
-			determineNewDistanceMoved();
+
+			robotBLE.enableSendingData();
+			updateCoordinateLocation();
+			robotBLE.disableSendingData();
+
+			if (robotBLE.disconnectFromClient() == true)
+			{
+				Serial.println("Disconnected from Client, stopping moving and now turning");
+			}
 
 			if (this->checkSideSpaceLeft(1))
 			{
@@ -587,19 +737,17 @@ void Robot::calculateStartingLocation()
     // Assume the robot is facing towards finish from centre of start location
 
     // Set coordinate position based on sensor readings
-    this->currentPosition.xCoordinate = leftSensorDistance/5.0f;
-    this->currentPosition.yCoordinate = backSensorDistance/5.0f;
+    this->currentPosition.xCoordinate = leftSensorDistance;
+    this->currentPosition.yCoordinate = backSensorDistance;
 
-    Serial.println(this->currentPosition.xCoordinate);
-    Serial.println(this->currentPosition.yCoordinate);
-}
+	myMap.updateRobotPosition(currentPosition.xCoordinate, currentPosition.yCoordinate);
 
-/**
- * @brief Inserts the starting location into the occupancy grid
- */
-void Robot::initialiseStartingLocationInMap()
-{
-    myMap.setRobotLocation(this->currentPosition.xCoordinate, this->currentPosition.yCoordinate);
+	Serial.println("\n(X Coordinate, Y Coordinate");
+	Serial.print("( ");
+    Serial.print(this->currentPosition.xCoordinate);
+	Serial.print(", ");
+    Serial.print(this->currentPosition.yCoordinate);
+	Serial.print(" )\n");
 }
 
 /**
@@ -720,7 +868,7 @@ bool Robot::checkRouteAhead(float distanceToMove)
 	{
 		return true;
 	}
-	else if (distanceToObjectsFront == 71.45f)
+	else if (distanceToObjectsFront == MAX_IR_DISTANCE)
 	{
 		Serial.println("Front range sensor max limit reached, or too close to object");
 		return true;
@@ -767,7 +915,7 @@ bool Robot::checkSideSpaceRight(int num_readings)
 }
 
 
-void Robot::determineNewDistanceMoved()
+void Robot::updateCoordinateLocation()
 {
 	float distanceMovedLeft = 0.0f;
 	float distanceMovedRight = 0.0f;
@@ -810,7 +958,10 @@ void Robot::determineNewDistanceMoved()
 	Serial.println(currentPosition.xCoordinate);
 	Serial.println("y coordinate");
 	Serial.println(currentPosition.yCoordinate);
+
 	robotBLE.updateRobotLocationInfo(bearing, currentPosition.xCoordinate, currentPosition.yCoordinate);
+
+	myMap.updateRobotPosition(currentPosition.xCoordinate, currentPosition.yCoordinate);
 }
 
 
