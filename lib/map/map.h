@@ -15,8 +15,13 @@
 #define MAP_WIDTH_X 22
 #define MAP_HEIGHT_Y 28
 
+#define OBSTACLE 3
+#define BORDER 2
+#define ROBOT 1
+#define FREE 0
 
-struct RobotPosition
+
+struct GridPosition
 {
     // Robot y position in occupancy grid
     int yGridSquare;
@@ -63,17 +68,29 @@ public:
 
     bool checkRouteAheadInMap(int bearing_heading, int distance_to_move);
 
+    GridPosition getMazeFinishPosition();
+
+    void getMazeFinishPosition(float &xPos, float &yPos);
+
+    float determineDistanceToFinish(int direction);
+
+    bool checkNextGridSpace(int direction);
 
 
 private:
 
     // FUNCTION DEFINITIONS
 
+    void calculateShortestPath();
+
+    float calculateLengthToFinish(int xPos, int yPos);
+
+    void addObstacleBorder(int xCoord, int yCoord, int extent);
 
 
     // VARIABLE DEFINITIONS
 
-    RobotPosition robotCurrentPosition;
+    GridPosition robotCurrentPosition;
     
 
     /**
@@ -83,14 +100,17 @@ private:
 	 */
 	int occupancyGrid[MAP_WIDTH_X][MAP_HEIGHT_Y] = {0};
 
-    RobotPosition robotPositionHistory[100];
+    GridPosition robotPositionHistory[100];
 
     int robotHistoryCount;
+
+    GridPosition mazeFinish;
 
 
 
 public:
-    RobotPosition getPositionInMap();
+    GridPosition getPositionInMap();
+
 
 
 };

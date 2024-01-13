@@ -72,25 +72,25 @@ int Joystick::check_button_press() {
   if(buttons.left == true){
     //Serial.println("left");
     //buttons.left = false;
-	return 3;
+	  return 3;
   }
   
   if(buttons.right == true){
     //Serial.println("right");
     //buttons.right = false;
-	return 2;
+	  return 2;
   }
   
   if(buttons.up == true){
     //Serial.println("up");
     //buttons.up = false;
-	return 0;
+	  return 0;
   }
   
   if(buttons.down == true){
     //Serial.println("down");
     //buttons.down = false;
-	return 1;
+	  return 1;
   }
   return 0;
 
@@ -148,5 +148,16 @@ void set_button_state(int state)
     buttons.down = false;
     buttons.up = false;
   }
-    
+}
+
+
+void Joystick::set_button_press(int state)
+{
+  if (state == 1)
+  {
+    buttons.left = true;
+    buttons.right = false;
+    buttons.down = false;
+    buttons.up = false;
+  }
 }

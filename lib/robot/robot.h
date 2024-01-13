@@ -14,14 +14,15 @@
 #define ROBOT_WHEEL_RADIUS 8.0f
 #define MAX_IR_DISTANCE 71.45f // 63.75 max distance from sensor reference point. 71 from robot centre
 #define MAX_USONIC_DISTANCE 100.0f
-#define DEFAULT_ROBOT_SPEED 0.75f
+// #define DEFAULT_ROBOT_SPEED 0.75f
+#define DEFAULT_ROBOT_SPEED 0.50f
 
 #define MIN_IR_DIST_FRONT 16.0f // Minimum distance for IR sensor to start detecting objects
 #define MIN_IR_DIST_REAR 16.0f
-#define MIN_USONIC_DIST 22.75f // Minimum distance for USonic sensor to start detecting objects
+#define MIN_USONIC_DIST 16.0f // Minimum distance for USonic sensor to start detecting objects
 
 
-struct robot_position
+struct Position
 {
 	// Float coordinate positions for the absolute position of the robot within the maze
 	float xCoordinate;
@@ -68,26 +69,6 @@ public:
 	void solveMaze();
 
 	/**
-	 * @brief Starts the robot driving forwards at its default speed of 0.5
-	 */
-    void driveForwards();
-
-	/**
-	 * @brief Starts the robot driving backwards at its default speed of 0.5
-	 */
-	void driveBackwards();
-
-	/**
-	 * @brief Stops the robot from moving
-	 */
-	void stopMoving();
-
-	/**
-	 * @brief Ends all processes on the robot and stops the state machine
-	 */
-    void end();
-
-	/**
 	 * @brief Moves the robot a given distance, if the value given is negative the robot will move backwards
 	 * 
 	 * @param distanceToMove 	The number of cm to move the robot
@@ -111,14 +92,22 @@ public:
     void rotateRobot(int degrees, bool ignoreBearingUpdate);
 
 
+	void determineDirection();
+
+	void moveForwards();
+
+	void stopMoving();
+
+
     // VARIABLE DECLARATIONS
 
-    enum robot_state
+    enum RobotState
 	{
 		STATE_TESTING,
 		STATE_SETUP,
 		STATE_LOCATE,
 		STATE_SOLVE,
+		STATE_DETERMINE_DIRECTION,
 		STATE_STOP,
 		STATE_FORWARD,
 		STATE_BACKWARD,
@@ -136,11 +125,13 @@ private:
 	// Motor left_motor;
 	// Motor right_motor;
 	Sensors mySensors;
+public:
 	// Map objects to map the maze
 	Map myMap;
 
 	Bluetooth robotBLE;
-
+	
+private:
 	// FUNCTION DECLARATIONS
 
 	/**
@@ -149,12 +140,6 @@ private:
 	 * next free direction and repeats
 	 */
 	void runDirectAlgorithm();
-
-	/**
-	 * @brief Runs the algorithm for the robot to solve the maze via following
-	 * the left hand wall until it reaches the end.
-	 */
-	void runWallFollowingAlgorithm();
 
 	void moveHelper();
 
@@ -208,7 +193,19 @@ private:
 
 	void correctOrientation();
 
-	void correctOrientationHelper(float a, float b, float aC);
+	void correctOrientationHelper(float a, float b, float aC, bool leftOfCentre);
+
+	void setRGBLED(int red, int green, int blue);
+
+	void runShortestNavigationAlgorithm();
+
+	/**
+	 * @brief Convert bearing into a numbering system to determine the direction
+	 * for the finish location distance, using integer maths
+	 * 
+	 * @return int - The direction the robot is facing
+	 */
+	int adjustedMapDirection();
 
 
 	// VARIABLE DECLARATIONS
@@ -239,11 +236,15 @@ private:
 	int bearing = 0;
 
     // Float coordinate positions for the absolute position of the robot within the maze
-    robot_position currentPosition;
+    Position currentPosition;
 
 	float initialDistanceMovedLeft;
 	float initialDistanceMovedRight;
 
+	float distanceToMoveForwards;
+
+
+	bool verbose;
 	
 };
 

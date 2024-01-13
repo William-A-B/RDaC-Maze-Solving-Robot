@@ -18,6 +18,7 @@ public:
     //Joystick();
 
     int check_button_press();
+    void set_button_press(int state);
 
 // private:
 //     void DOWN_ISR();

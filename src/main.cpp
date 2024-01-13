@@ -11,7 +11,7 @@
 #include "joystick.h"
 #include "robot.h"
 
-Robot my_robot;
+Robot myRobot;
 Joystick my_joystick;
 
 bool continue_running = true;
@@ -30,10 +30,10 @@ void setup()
 	Joystick_setup();
 
 	// Setup for robot that is run once at the very start
-	my_robot.initialSetup();
+	myRobot.initialSetup();
 
-	my_robot.currentState = my_robot.STATE_TESTING;
-	// my_robot.currentState = my_robot.STATE_SETUP;
+	// myRobot.currentState = myRobot.STATE_TESTING;
+	myRobot.currentState = myRobot.STATE_SETUP;
 }
 
 /**
@@ -44,41 +44,48 @@ void loop()
 {
 	if (my_joystick.check_button_press() == 3)
 	{
-		switch (my_robot.currentState)
+		switch (myRobot.currentState)
 		{
-			case my_robot.STATE_TESTING:
-				my_robot.test();
+			case myRobot.STATE_TESTING:
+				myRobot.test();
 				break;
-			case my_robot.STATE_SETUP:
-				my_robot.setup();
+			case myRobot.STATE_SETUP:
+				myRobot.setup();
 				break;
-			case my_robot.STATE_LOCATE:
+			case myRobot.STATE_LOCATE:
 				break;
-			case my_robot.STATE_SOLVE:
-				my_robot.solveMaze();
+			case myRobot.STATE_SOLVE:
+				myRobot.solveMaze();
 				break;
-			case my_robot.STATE_STOP:
-				my_robot.stopMoving();
+			case myRobot.STATE_DETERMINE_DIRECTION:
+				myRobot.determineDirection();
 				break;
-			case my_robot.STATE_FORWARD:
-				my_robot.driveForwards();
+			case myRobot.STATE_STOP:
+				myRobot.stopMoving();
 				break;
-			case my_robot.STATE_BACKWARD:
+			case myRobot.STATE_FORWARD:
+				myRobot.moveForwards();
 				break;
-			case my_robot.STATE_LEFT:
-				my_robot.rotateRobot(-90);
+			case myRobot.STATE_BACKWARD:
 				break;
-			case my_robot.STATE_RIGHT:
-				my_robot.rotateRobot(90);
+			case myRobot.STATE_LEFT:
+				myRobot.rotateRobot(-90);
 				break;
-			case my_robot.STATE_END:
+			case myRobot.STATE_RIGHT:
+				myRobot.rotateRobot(90);
+				break;
+			case myRobot.STATE_END:
 				set_button_state(0);
 				break;
 		}
 	}
 	else if (my_joystick.check_button_press() == 2)
 	{
-		my_robot.end();
+		myRobot.stopMoving();
+		//myRobot.myMap.displayRobotHistory();
+		myRobot.myMap.displayMap();
+		my_joystick.set_button_press(1);
+		myRobot.currentState = myRobot.RobotState::STATE_STOP;
 	}
 
 
@@ -90,19 +97,19 @@ void loop()
 	// 	// Forwards direction pressed on Joystick --> Run
 	// 	if (my_joystick.check_button_press() == 3)
 	// 	{
-	// 		continue_running = my_robot.start();
-	// 		//continue_running = my_robot.run();
+	// 		continue_running = myRobot.start();
+	// 		//continue_running = myRobot.run();
 	// 	}
 	// 	// Backwards direction pressed on Joystick --> Stop
 	// 	else if (my_joystick.check_button_press() == 2)
 	// 	{
-	// 		my_robot.stopMoving();
+	// 		myRobot.stopMoving();
 	// 	}
 	// }
 	// else
 	// {
 	// 	set_button_state(0);
-	// 	my_robot.stopMoving();
+	// 	myRobot.stopMoving();
 	// }
 }
 
