@@ -9,7 +9,9 @@
 
 // 0.48f - Move in straight line value
 // #define MOTORSHIFT 0.4740f // Motor calibration constant to correct speed of motors for a speed on 0.75f
-#define MOTORSHIFT 0.529f
+
+//#define MOTORSHIFT 0.529f
+#define MOTORSHIFT 0.545f
 
 // Correct value to give equal encoder distances for the values of
 // left = 0.046125f
@@ -31,7 +33,7 @@ public:
 
     Motor( ){};
 
-    enum motor_direction
+    enum motorDirection
 	{
 		DIR_FORWARDS,
 		DIR_BACKWARDS,
@@ -40,56 +42,56 @@ public:
 	} current_direction;
 
     void drive(int time_to_drive_forwards);
-    void set_direction(motor_direction current_direction);
-    void attach_encoder_interrupts();
+    void setDirection(motorDirection current_direction);
+    void attachEncoderInterrupts();
     void setup();
-    void stop_driving();
+    void stopDriving();
     void turn_left(int angle);
     void turn_right(int angle);
     
-    void set_speed(float speed);
-    float get_speed();
+    void setSpeed(float speed);
+    float getSpeed();
 
-    float calculate_distance_by_wheel_rotations_left();
-    float calculate_distance_by_wheel_rotations_right();
+    float calculateDistanceByWheelRotationsLeft();
+    float calculateDistanceByWheelRotationsRight();
 
-    int get_wheel_rotations_left();
-    int get_wheel_rotations_right();
+    int getWheelRotationsLeft();
+    int getWheelRotationsRight();
 
-    long int get_shaft_revolutions_left();
-    long int get_shaft_revolutions_right();
-    long int get_encoder_revolutions_left();
-    long int get_encoder_revolutions_right();
+    long int getShaftRevolutionsLeft();
+    long int getShaftRevolutionsRight();
+    long int getEncoderRevolutionsLeft();
+    long int getEncoderRevolutionsRight();
 
-    void set_distance_travelled_left(float distance_to_set);
-    void increment_distance_travelled_left(float distance_to_increase);
-    void set_distance_travelled_right(float distance_to_set);
-    void increment_distance_travelled_right(float distance_to_increase);
-    float get_distance_travelled_left();
-    float get_distance_travelled_right();
+    void setDistanceTravelledLeft(float distance_to_set);
+    void incrementDistanceTravelledLeft(float distance_to_increase);
+    void setDistanceTravelledRight(float distance_to_set);
+    void incrementDistanceTravelledRight(float distance_to_increase);
+    float getDistanceTravelledLeft();
+    float getDistanceTravelledRight();
 
 
 
-    //void count_pulse_left();
-    //void count_pulse_right();
+    //void countPulseLeft();
+    //void countPulseRight();
 
 private:
 
-    void count_pulse_left();
-    void count_pulse_right();
+    void countPulseLeft();
+    void countPulseRight();
 
 	int pinNumber;
 
-    float motor_speed;
+    float motorSpeed;
 
     
     // Shaft and encoder counters for left motor
-    long int shaft_rev_A = 0;
-    long int enc_count_A = 0;
+    long int shaftRevolutionsLeft = 0;
+    long int encoderCountLeft = 0;
 
     // Shaft and encoder counters for right motor
-    long int shaft_rev_B = 0;
-    long int enc_count_B = 0;
+    long int shaftRevolutionsRight = 0;
+    long int encoderCountRight = 0;
 
     // The absolute distance travelled based on the left motor encoder
     // In mm
@@ -98,7 +100,7 @@ private:
     // 1000 46.25cm = 0.4625mm
     // 0.46125 per 1 encoder count avg
     // 0.046125 cm
-    float distance_travelled_left = 0;
+    float distanceTravelledLeft = 0;
 
     // The absolute distance travelled based on the right motor encoder
     // In mm
@@ -110,12 +112,12 @@ private:
     // 1002 17.25cm = 0.1722
     // 0.1722mm per 1 encoder count avg
     // 0.01722 cm
-    float distance_travelled_right = 0;
+    float distanceTravelledRight = 0;
 
     // 329 encoder counts for one left wheel rotation
-    int wheel_rotations_left = 0;
+    int wheelRotationsLeft = 0;
     // 865 encoder counts for one right wheel rotation
-    int wheel_rotations_right = 0;
+    int wheelRotationsRight = 0;
 
 
 };

@@ -15,7 +15,7 @@ Map::Map()
 	// Add finishing position
 	// mazeFinish.xGridSquare = 15;
 	// mazeFinish.yGridSquare = 39;
-	mazeFinish.xGridSquare = 13;
+	mazeFinish.xGridSquare = 15;
 	mazeFinish.yGridSquare = 20;
 }
 
@@ -68,7 +68,7 @@ void Map::addObstaclesToMap(float frontSensorDistance, float backSensorDistance,
 	const int rPosX = robotCurrentPosition.xGridSquare + 1;
 	const int rPosY = robotCurrentPosition.yGridSquare + 1;
 
-	int border = 2;
+	int border = 1;
 
 	// Add other bearing conditions
 	// Make sure object position adding is not outside the array
@@ -134,11 +134,13 @@ void Map::addObstacleBorder(int xCoord, int yCoord, int extent)
 {
 	for (int x = xCoord-extent; x <= xCoord+extent; x++)
 	{
-		if (x >= 0 || x < MAP_WIDTH_X)
+		// sbsb Change tox > 0 and Map_width_x - 1 because the outer edge is always obstacles
+		if (x > 0 || x < MAP_WIDTH_X-1)
 		{
 			for (int y = yCoord-extent; y <= yCoord+extent; y++)
 			{
-				if (y >= 0 || y < MAP_HEIGHT_Y)
+				// Change to y> 0 and  Map_width_y - 1 because the outer edge is always obstacles
+				if (y > 0 || y < MAP_HEIGHT_Y-1)
 				{
 					if (x == xCoord && y == yCoord)
 					{
@@ -146,7 +148,7 @@ void Map::addObstacleBorder(int xCoord, int yCoord, int extent)
 					}
 					else
 					{
-						if (occupancyGrid[x][y] != OBSTACLE || occupancyGrid[x][y] != ROBOT)
+						if (occupancyGrid[x][y] != OBSTACLE && occupancyGrid[x][y] != ROBOT)
 							occupancyGrid[x][y] = BORDER;
 					}
 				}
@@ -180,8 +182,9 @@ void Map::updateRobotPosition(float robotXCoord, float robotYCoord)
  */
 void Map::displayMap()
 {
-	Serial.println("\n\n\nOCCUPANCY GRID MAP\n");
-	for (int y = MAP_HEIGHT_Y; y >= 0; y--)
+	Serial.println("\nOCCUPANCY GRID MAP\n");
+	// sbsb should be starting at -1
+	for (int y = MAP_HEIGHT_Y-1; y >= 0; y--)
 	{
 		for (int x = 0; x < MAP_WIDTH_X; x++)
 		{

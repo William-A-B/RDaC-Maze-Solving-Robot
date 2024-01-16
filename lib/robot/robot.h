@@ -13,7 +13,7 @@
 // Radius of wheels from centre of robot to centre of wheels
 #define ROBOT_WHEEL_RADIUS 8.0f
 #define MAX_IR_DISTANCE 71.45f // 63.75 max distance from sensor reference point. 71 from robot centre
-#define MAX_USONIC_DISTANCE 100.0f
+#define MAX_USONIC_DISTANCE 120.0f
 // #define DEFAULT_ROBOT_SPEED 0.75f
 #define DEFAULT_ROBOT_SPEED 0.50f
 

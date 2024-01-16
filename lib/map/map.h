@@ -6,14 +6,14 @@
 #include "errorflag.h"
 
 // Default Maze Size
-// #define MAP_WIDTH_X 32
-// #define MAP_HEIGHT_Y 44
+#define MAP_WIDTH_X 32
+#define MAP_HEIGHT_Y 42
 
 // Reduced Maze Size
 // 100cm width
 // 130cm height
-#define MAP_WIDTH_X 22
-#define MAP_HEIGHT_Y 28
+// #define MAP_WIDTH_X 22
+// #define MAP_HEIGHT_Y 28
 
 #define OBSTACLE 3
 #define BORDER 2

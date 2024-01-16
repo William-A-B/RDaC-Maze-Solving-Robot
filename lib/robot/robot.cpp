@@ -16,10 +16,19 @@ void Robot::test()
 	// rotateRobot(-90);
 	// moveRobot(20.0f);
 
+	moveRobot(10.0f);
+	rotateRobot(-90);
+	moveRobot(10.0f);
+	rotateRobot(-90);
+	moveRobot(10.0f);
+	rotateRobot(-90);
+	moveRobot(10.0f);
+	rotateRobot(-90);
+
 	Serial.println(mySensors.read_averaged_IR_sensor_front(1));
 	//rotateRobot(-2);
 
-	wait_us(200000);
+	wait_us(2000000);
 
 }
 
@@ -39,10 +48,10 @@ void Robot::initialSetup()
 	myMotors.setup();
 
 	// Set the default direction for the robot to move in
-	myMotors.set_direction(myMotors.DIR_FORWARDS);
+	myMotors.setDirection(myMotors.DIR_FORWARDS);
 
 	// Attach the interrupts for the encoders on the motors
-	myMotors.attach_encoder_interrupts();
+	myMotors.attachEncoderInterrupts();
 
 	myMap.initialSetup(0, 0);
 
@@ -215,8 +224,8 @@ void Robot::runDirectAlgorithm()
 		// 	}
 		// 	this->driveForwards();
 
-		// 	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
-		// 	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+		// 	initialDistanceMovedLeft = myMotors.getDistanceTravelledLeft();
+		// 	initialDistanceMovedRight = myMotors.getDistanceTravelledRight();
 		// 	driveForwardsStarted = true;
 		// }
 		
@@ -292,13 +301,13 @@ void Robot::moveHelper()
 	if (verbose)
 		Serial.println("\nmoveHelper\n");
 
-	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
-	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+	initialDistanceMovedLeft = myMotors.getDistanceTravelledLeft();
+	initialDistanceMovedRight = myMotors.getDistanceTravelledRight();
 
 	moveRobot(distanceToMoveForwards);
 
 
-	correctOrientation();
+	//correctOrientation();
 
 	// Updates the coordinate positions of the robot based 
 	// on the initial distance before moving
@@ -308,6 +317,7 @@ void Robot::moveHelper()
 	processSensorInfo();
 
 	myMap.displayMap();
+	myMap.displayRobotHistory();
 }
 
 
@@ -340,7 +350,7 @@ void Robot::moveRobot(float distanceToMove)
 
 
 	// Stop robot moving (just in case)
-	myMotors.stop_driving();
+	myMotors.stopDriving();
 	
 	// WABWAB
 	// Check that space ahead the robot is wanting to move is free
@@ -359,13 +369,13 @@ void Robot::moveRobot(float distanceToMove)
 	// negative = backwards
 	if (distanceToMove > 0)
 	{
-		myMotors.set_direction(myMotors.DIR_FORWARDS);
+		myMotors.setDirection(myMotors.DIR_FORWARDS);
 	}
 	else if (distanceToMove < 0)
 	{
 		// Since the distance is negative, make it positive for using in the calculation later
 		distanceToMove = distanceToMove * -1.0f;
-		myMotors.set_direction(myMotors.DIR_BACKWARDS);
+		myMotors.setDirection(myMotors.DIR_BACKWARDS);
 	}
 	else
 	{
@@ -373,11 +383,11 @@ void Robot::moveRobot(float distanceToMove)
 	}
 
     // Calculate current distance the robot has moved before the robot starts moving the set amount
-	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
-	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+	initialDistanceMovedLeft = myMotors.getDistanceTravelledLeft();
+	initialDistanceMovedRight = myMotors.getDistanceTravelledRight();
 
     // Start robot moving
-	myMotors.set_speed(DEFAULT_ROBOT_SPEED);
+	myMotors.setSpeed(DEFAULT_ROBOT_SPEED);
 	myMotors.drive(0);
 
 
@@ -387,10 +397,10 @@ void Robot::moveRobot(float distanceToMove)
     do 
 	{
 		// Get left wheel distance moved whilst turning robot
-		distanceMovedLeft = myMotors.get_distance_travelled_left() - initialDistanceMovedLeft;
+		distanceMovedLeft = myMotors.getDistanceTravelledLeft() - initialDistanceMovedLeft;
 
 		// Get right wheel distance moved whilst turning robot
-		distanceMovedRight = myMotors.get_distance_travelled_right() - initialDistanceMovedRight;
+		distanceMovedRight = myMotors.getDistanceTravelledRight() - initialDistanceMovedRight;
 
 		// Get sum/difference between both motors
 		differenceBetweenMotorDistances = distanceMovedLeft + distanceMovedRight;
@@ -416,10 +426,10 @@ void Robot::moveRobot(float distanceToMove)
     // while (fabs(differenceBetweenMotorDistances) < (distanceToMove * 2.0f))
 	// {
 	// 	// Get left wheel distance moved whilst turning robot
-	// 	distanceMovedLeft = myMotors.get_distance_travelled_left() - initialDistanceMovedLeft;
+	// 	distanceMovedLeft = myMotors.getDistanceTravelledLeft() - initialDistanceMovedLeft;
 
 	// 	// Get right wheel distance moved whilst turning robot
-	// 	distanceMovedRight = myMotors.get_distance_travelled_right() - initialDistanceMovedRight;
+	// 	distanceMovedRight = myMotors.getDistanceTravelledRight() - initialDistanceMovedRight;
 
 	// 	// Get sum/difference between both motors
 	// 	differenceBetweenMotorDistances = distanceMovedLeft + distanceMovedRight;
@@ -429,8 +439,8 @@ void Robot::moveRobot(float distanceToMove)
 	// }
 
     // Stop robot moving and reset direction to forwards (incase it was going backwards)
-	myMotors.stop_driving();
-    myMotors.set_direction(myMotors.DIR_FORWARDS);
+	myMotors.stopDriving();
+    myMotors.setDirection(myMotors.DIR_FORWARDS);
 }
 
 /**
@@ -461,7 +471,7 @@ void Robot::rotateRobot(int degrees, bool ignoreBearingUpdate)
 	float differenceBetweenMotorDistances = 0.0f;
 
 	// Stop robot moving
-	myMotors.stop_driving();
+	myMotors.stopDriving();
 
 	if (ignoreBearingUpdate == false)
 	{
@@ -471,12 +481,12 @@ void Robot::rotateRobot(int degrees, bool ignoreBearingUpdate)
 	// Call direction change function on motors depending on the angle direction
 	if (degrees > 0)
 	{
-		myMotors.set_direction(myMotors.DIR_CLOCKWISE);
+		myMotors.setDirection(myMotors.DIR_CLOCKWISE);
 	}
 	else if (degrees < 0)
 	{
 		degrees = degrees * -1;
-		myMotors.set_direction(myMotors.DIR_ANTICLOCKWISE);
+		myMotors.setDirection(myMotors.DIR_ANTICLOCKWISE);
 	}
 	else
 	{
@@ -484,8 +494,8 @@ void Robot::rotateRobot(int degrees, bool ignoreBearingUpdate)
 	}
 
 	// Calculate current distance the robot has moved before the robot starts turning the set amount
-	initialDistanceMovedLeft = myMotors.get_distance_travelled_left();
-	initialDistanceMovedRight = myMotors.get_distance_travelled_right();
+	initialDistanceMovedLeft = myMotors.getDistanceTravelledLeft();
+	initialDistanceMovedRight = myMotors.getDistanceTravelledRight();
 
 	// Calculate equivalent arc of circle
 	// Left wheel 80mm out from centre
@@ -495,7 +505,7 @@ void Robot::rotateRobot(int degrees, bool ignoreBearingUpdate)
 	float arc_distance_to_turn = ((float)degrees / 360.0f) * 2.0f * 3.141f * ROBOT_WHEEL_RADIUS;
 
 	// Start robot moving
-	myMotors.set_speed(DEFAULT_ROBOT_SPEED);
+	myMotors.setSpeed(DEFAULT_ROBOT_SPEED);
 	myMotors.drive(0);
 
 	// While distance moved < arc length
@@ -506,10 +516,10 @@ void Robot::rotateRobot(int degrees, bool ignoreBearingUpdate)
 	while (fabs(differenceBetweenMotorDistances) < (arc_distance_to_turn * 2.0f))
 	{
 		// Get left wheel distance moved whilst turning robot
-		distanceMovedWhileTurningLeft = myMotors.get_distance_travelled_left() - initialDistanceMovedLeft;
+		distanceMovedWhileTurningLeft = myMotors.getDistanceTravelledLeft() - initialDistanceMovedLeft;
 
 		// Get right wheel distance moved whilst turning robot
-		distanceMovedWhileTurningRight = myMotors.get_distance_travelled_right() - initialDistanceMovedRight;
+		distanceMovedWhileTurningRight = myMotors.getDistanceTravelledRight() - initialDistanceMovedRight;
 
 		// Get difference between both motors
 		differenceBetweenMotorDistances = distanceMovedWhileTurningLeft - distanceMovedWhileTurningRight;
@@ -519,8 +529,8 @@ void Robot::rotateRobot(int degrees, bool ignoreBearingUpdate)
 	}
 
 	// Stop robot moving and reset direction to forwards
-	myMotors.stop_driving();
-	myMotors.set_direction(myMotors.DIR_FORWARDS);
+	myMotors.stopDriving();
+	myMotors.setDirection(myMotors.DIR_FORWARDS);
 }
 
 /**
@@ -661,7 +671,7 @@ void Robot::updateBearing(int angle_to_add)
  */
 bool Robot::checkRouteAhead(float distanceToMove)
 {
-	float distanceToObjectsFront = mySensors.read_averaged_IR_sensor_front(5);
+	float distanceToObjectsFront = mySensors.read_averaged_IR_sensor_front(1);
 
 	if (distanceToMove == -1.0f)
 	{
@@ -730,8 +740,8 @@ void Robot::updateCoordinateLocation()
 	float distanceMovedRight = 0.0f;
 	// float averageDistanceMoved = 0.0f;
 
-	// distanceMovedLeft = myMotors.get_distance_travelled_left() - initialDistanceMovedLeft;
-	distanceMovedRight = myMotors.get_distance_travelled_right() - initialDistanceMovedRight;
+	// distanceMovedLeft = myMotors.getDistanceTravelledLeft() - initialDistanceMovedLeft;
+	distanceMovedRight = myMotors.getDistanceTravelledRight() - initialDistanceMovedRight;
 
 	// Average distance between both wheels
 	// averageDistanceMoved = (distanceMovedLeft + distanceMovedRight) / 2.0f;
@@ -859,14 +869,37 @@ void Robot::correctOrientation()
 
 void Robot::correctOrientationHelper(float a, float b, float aC, bool leftOfCentre)
 {
-	if (verbose)
-		Serial.println("\ncorrectOrientationHelper");
+	//if (verbose)
+	//	Serial.println("\ncorrectOrientationHelper");
+
+	if(leftOfCentre == true)
+	{
+		Serial.print("orig: ");
+		Serial.print(a);
+		Serial.print(", left:");
+		Serial.print(b);
+		Serial.println("\n");
+	}
+	else 
+	{
+		Serial.print("orig: ");
+		Serial.print(a);
+		Serial.print(", right:");
+		Serial.print(b);
+		Serial.println(" ");
+	}
+	
 
 	float c = sqrtf((a*a) + (b*b) - (2*a*b*cosf(aC*PI/180.0f)));
 
 	float aA = asinf((a*sinf(aC*PI/180.0f))/c);
 
-	float rotAngle = 90.0f - (aA*180/PI);
+	Serial.print("c: ");
+	Serial.print(c);
+	Serial.println(", Angle aA: ");
+	Serial.print(aA*180.0f/PI);
+	
+	float rotAngle = 90.0f - (aA*180.0f/PI);
 
 	// If robot going towards right, then apply a negative rotation
 	if (leftOfCentre == false)
@@ -874,11 +907,9 @@ void Robot::correctOrientationHelper(float a, float b, float aC, bool leftOfCent
 	
 	rotateRobot(rotAngle, true);
 
-	if (verbose)
-	{
-		Serial.println("\n\nAdjustment Angle");
-		Serial.println(rotAngle);
-	}
+	Serial.print("\n\nAdjustment Angle ");
+	Serial.println(rotAngle);
+	
 }
 
 void Robot::setRGBLED(int red, int green, int blue)
@@ -990,6 +1021,6 @@ int Robot::adjustedMapDirection()
  */
 void Robot::stopMoving()
 {
-	myMotors.stop_driving();
+	myMotors.stopDriving();
 	//this->currentState = this->STATE_STOP;
 }

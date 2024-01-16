@@ -1,30 +1,30 @@
 #include "motor.h"
 
-mbed::DigitalOut motor_dir_A_left(MOTOR_LEFT_DIRECTION);
-mbed::DigitalOut motor_dir_B_right(MOTOR_RIGHT_DIRECTION);
+mbed::DigitalOut motorDirectionLeft(MOTOR_LEFT_DIRECTION);
+mbed::DigitalOut motorDirectionRight(MOTOR_RIGHT_DIRECTION);
 
 // A is left wheel
 // B is right wheel
-mbed::PwmOut motor_left_PWM(MOTOR_LEFT_PWM);
-mbed::PwmOut motor_right_PWM(MOTOR_RIGHT_PWM);
+mbed::PwmOut motorPWMLeft(MOTOR_LEFT_PWM);
+mbed::PwmOut motorPWMRight(MOTOR_RIGHT_PWM);
 
-mbed::InterruptIn enc_A_left(MOTOR_LEFT_ENCODER);
+mbed::InterruptIn encoderLeft(MOTOR_LEFT_ENCODER);
 //mbed::InterruptIn enc_A_left_secondary(MOTOR_LEFT_ENCODER_SECONDARY);
-mbed::InterruptIn enc_B_right(MOTOR_RIGHT_ENCODER);
+mbed::InterruptIn encoderRight(MOTOR_RIGHT_ENCODER);
 //mbed::InterruptIn enc_B_right_secondary(MOTOR_RIGHT_ENCODER_SECONDARY);
 
-mbed::DigitalIn encoder_left_in(MOTOR_LEFT_ENCODER);
-mbed::DigitalIn encoder_left_in_secondary(MOTOR_LEFT_ENCODER_SECONDARY);
-mbed::DigitalIn encoder_right_in(MOTOR_RIGHT_ENCODER);
-mbed::DigitalIn encoder_right_in_secondary(MOTOR_RIGHT_ENCODER_SECONDARY);
+mbed::DigitalIn encoderLeftIn(MOTOR_LEFT_ENCODER);
+mbed::DigitalIn encoderLeftInSecond(MOTOR_LEFT_ENCODER_SECONDARY);
+mbed::DigitalIn encoderRightIn(MOTOR_RIGHT_ENCODER);
+mbed::DigitalIn encoderRightInSecond(MOTOR_RIGHT_ENCODER_SECONDARY);
 
 
 
 
-void Motor::attach_encoder_interrupts()
+void Motor::attachEncoderInterrupts()
 {
-    enc_A_left.rise(mbed::callback(this, &Motor::count_pulse_left));
-    enc_B_right.rise(mbed::callback(this, &Motor::count_pulse_right));
+    encoderLeft.rise(mbed::callback(this, &Motor::countPulseLeft));
+    encoderRight.rise(mbed::callback(this, &Motor::countPulseRight));
 }
 
 // Motors aMotor;
@@ -36,27 +36,27 @@ void Motor::attach_encoder_interrupts()
  * 2 - clockwise circle
  * 3 - anticlockwise circle
  * */
-void Motor::set_direction(motor_direction current_direction)
+void Motor::setDirection(motorDirection currentDirection)
 {
-    if (current_direction == DIR_FORWARDS)
+    if (currentDirection == DIR_FORWARDS)
     {
-        motor_dir_A_left = 0;
-        motor_dir_B_right = 1;
+        motorDirectionLeft = 0;
+        motorDirectionRight = 1;
     }
-    else if (current_direction == DIR_BACKWARDS)
+    else if (currentDirection == DIR_BACKWARDS)
     {
-        motor_dir_A_left = 1;
-        motor_dir_B_right = 0;
+        motorDirectionLeft = 1;
+        motorDirectionRight = 0;
     }
-    else if (current_direction == DIR_CLOCKWISE)
+    else if (currentDirection == DIR_CLOCKWISE)
     {
-        motor_dir_A_left = 0;
-        motor_dir_B_right = 0;
+        motorDirectionLeft = 0;
+        motorDirectionRight = 0;
     }
-    else if (current_direction == DIR_ANTICLOCKWISE)
+    else if (currentDirection == DIR_ANTICLOCKWISE)
     {
-        motor_dir_A_left = 1;
-        motor_dir_B_right = 1;
+        motorDirectionLeft = 1;
+        motorDirectionRight = 1;
     }
 }
 
@@ -64,231 +64,162 @@ void Motor::set_direction(motor_direction current_direction)
 
 void Motor::setup()
 {
-    motor_left_PWM.period_us(200);
-    motor_right_PWM.period_us(200);
+    motorPWMLeft.period_us(200);
+    motorPWMRight.period_us(200);
 }
 
 /**
- * @param time_to_drive_forwards - How long to drive forwards for in ms
- * Sets the motors to drive in the direction set and at the speed set by the set_speed function
+ * @param timeToDriveForwards - How long to drive forwards for in ms
+ * Sets the motors to drive in the direction set and at the speed set by the setSpeed function
  */
-void Motor::drive(int time_to_drive_forwards)
+void Motor::drive(int timeToDriveForwards)
 {
-    // if (motor_speed == 0)
-    // {
-    //     throw (MotorSpeedInvalid);
-    // }
-    if (time_to_drive_forwards != 0)
+    if (timeToDriveForwards != 0)
     {
-        motor_left_PWM.write(get_speed() * MOTORSHIFT);
-        motor_right_PWM.write(get_speed());
-        wait_us(time_to_drive_forwards * 1000);
-        stop_driving();
+        motorPWMLeft.write(getSpeed() * MOTORSHIFT);
+        motorPWMRight.write(getSpeed());
+        wait_us(timeToDriveForwards * 1000);
+        stopDriving();
     }
     else
     {
-        motor_left_PWM.write(motor_speed * MOTORSHIFT);
-        motor_right_PWM.write(motor_speed);
+        motorPWMLeft.write(motorSpeed * MOTORSHIFT);
+        motorPWMRight.write(motorSpeed);
     }
 }
 
-void Motor::stop_driving()
+void Motor::stopDriving()
 {
-    motor_left_PWM.write(0.0f);
-    motor_right_PWM.write(0.0f);
+    motorPWMLeft.write(0.0f);
+    motorPWMRight.write(0.0f);
 }
 
-
-void Motor::turn_left(int angle)
+void Motor::setSpeed(float speedToSet)
 {
-    motor_right_PWM.write(0.6f);
-    // stop_driving();
-
-    // mbed::Timer timer;
-    // timer.start();
-    // while (timer.elapsed_time().count() < 2.25 * 1000000)
-    // {
-    //     set_direction(DIR_ANTICLOCKWISE);
-    //     drive(0);
-    // }
-    // timer.stop();
-    // set_direction(DIR_FORWARDS);
-
-    // // long int current_shaft = shaft_rev_A;
-    // // while (shaft_rev_A < current_shaft + 150)
-    // // {
-    // //     motor_left_PWM.write(0.5*MOTORSHIFT);
-    // // }
+    motorSpeed = speedToSet;
+    motorPWMLeft.write(speedToSet * MOTORSHIFT);
+    motorPWMRight.write(speedToSet);
 }
 
-void Motor::turn_right(int angle)
+float Motor::getSpeed()
 {
-    motor_right_PWM.write(0.4f);
-    // stop_driving();
-
-    // long int current_shaft = shaft_rev_B;
-    // while (shaft_rev_B < current_shaft + 150)
-    // {
-    //     motor_right_PWM.write(0.5);
-    // }
-    // stop_driving();
+    return motorSpeed;
 }
 
-void Motor::set_speed(float speed_to_set)
+void Motor::countPulseLeft()
 {
-    // float pwm_current = motor_speed;
-    // float pwm_to_set = speed_to_set;
-
-    motor_speed = speed_to_set;
-    motor_left_PWM.write(speed_to_set * MOTORSHIFT);
-    motor_right_PWM.write(speed_to_set);
-
-    // if (pwm_current < pwm_to_set)
-    // {
-    //     pwm_current = pwm_current + 0.1f;
-    //     motor_left_PWM.write(pwm_current);
-    //     motor_right_PWM.write(pwm_current);
-    // }
-
-    // if (pwm_current > pwm_to_set)
-    // {
-    //     pwm_current = pwm_current - 0.1f;
-    //     motor_left_PWM.write(pwm_current);
-    //     motor_right_PWM.write(pwm_current);
-    // }
-}
-
-float Motor::get_speed()
-{
-    return motor_speed;
-}
-
-void Motor::count_pulse_left()
-{
-    if (encoder_left_in != encoder_left_in_secondary)
+    if (encoderLeftIn != encoderLeftInSecond)
     {
-        distance_travelled_left = distance_travelled_left + LEFT_ENCODER_DISTANCE;
-        // if (enc_count_A % 329)
+        distanceTravelledLeft = distanceTravelledLeft + LEFT_ENCODER_DISTANCE;
+        // if (encoderCountLeft % 329)
         // {
-        //     wheel_rotations_left++;
+        //     wheelRotationsLeft++;
         // }
     }
     else
     {
-        distance_travelled_left = distance_travelled_left - LEFT_ENCODER_DISTANCE;
-        // if (enc_count_A % 329)
+        distanceTravelledLeft = distanceTravelledLeft - LEFT_ENCODER_DISTANCE;
+        // if (encoderCountLeft % 329)
         // {
-        //     wheel_rotations_left--;
+        //     wheelRotationsLeft--;
         // }
     }
-    //distance_travelled_left = distance_travelled_left + 0.435;
-    enc_count_A++;
+    //distanceTravelledLeft = distanceTravelledLeft + 0.435;
+    encoderCountLeft++;
 }
 
-void Motor::count_pulse_right()
+void Motor::countPulseRight()
 {
-    if (encoder_right_in != encoder_right_in_secondary)
+    if (encoderRightIn != encoderRightInSecond)
     {
-        distance_travelled_right = distance_travelled_right - RIGHT_ENCODER_DISTANCE;
-        if (enc_count_B % 865)
+        distanceTravelledRight = distanceTravelledRight - RIGHT_ENCODER_DISTANCE;
+        if (encoderCountRight % 865)
         {
-            wheel_rotations_right++;
+            wheelRotationsRight++;
         }
     }
     else
     {
-        distance_travelled_right = distance_travelled_right + RIGHT_ENCODER_DISTANCE;
-        if (enc_count_B % 865)
+        distanceTravelledRight = distanceTravelledRight + RIGHT_ENCODER_DISTANCE;
+        if (encoderCountRight % 865)
         {
-            wheel_rotations_right--;
+            wheelRotationsRight--;
         }
     }
-    //distance_travelled_right = distance_travelled_right + 0.435;
-    enc_count_B++;
+    //distanceTravelledRight = distanceTravelledRight + 0.435;
+    encoderCountRight++;
 }
 
-// void count_pulse_right()
-// {
-//     if(enc_count_B%12 == 0)
-//     {
-//         if(enc_count_B%150 == 0)
-//         {
-//             shaft_rev_B++;
-//         }
-//     }
-//     enc_count_B++;
-// }
-
-float Motor::calculate_distance_by_wheel_rotations_left()
+float Motor::calculateDistanceByWheelRotationsLeft()
 {
-    float distance_moved_left = WHEEL_DIAMETER * PI * wheel_rotations_left;
-    return distance_moved_left;
+    float distanceMovedLeft = WHEEL_DIAMETER * PI * wheelRotationsLeft;
+    return distanceMovedLeft;
 }
 
-float Motor::calculate_distance_by_wheel_rotations_right()
+float Motor::calculateDistanceByWheelRotationsRight()
 {
-    float distance_moved_right = WHEEL_DIAMETER * PI * wheel_rotations_right;
-    return distance_moved_right;
+    float distanceMovedRight = WHEEL_DIAMETER * PI * wheelRotationsRight;
+    return distanceMovedRight;
 }
 
-int Motor::get_wheel_rotations_left()
+int Motor::getWheelRotationsLeft()
 {
-    return wheel_rotations_left;
+    return wheelRotationsLeft;
 }
 
-int Motor::get_wheel_rotations_right()
+int Motor::getWheelRotationsRight()
 {
-    return wheel_rotations_right;
+    return wheelRotationsRight;
 }
 
-long int Motor::get_shaft_revolutions_left()
+long int Motor::getShaftRevolutionsLeft()
 {
-    return shaft_rev_A;
+    return shaftRevolutionsLeft;
 }
 
-long int Motor::get_shaft_revolutions_right()
+long int Motor::getShaftRevolutionsRight()
 {
-    return shaft_rev_B;
+    return shaftRevolutionsRight;
 }
 
-long int Motor::get_encoder_revolutions_left()
+long int Motor::getEncoderRevolutionsLeft()
 {
-    return enc_count_A;
+    return encoderCountLeft;
 }
 
-long int Motor::get_encoder_revolutions_right()
+long int Motor::getEncoderRevolutionsRight()
 {
-    return enc_count_B;
+    return encoderCountRight;
 }
 
-void Motor::set_distance_travelled_left(float distance_to_set)
+void Motor::setDistanceTravelledLeft(float distance_to_set)
 {
-    distance_travelled_left = distance_to_set;
+    distanceTravelledLeft = distance_to_set;
 }
 
-void Motor::increment_distance_travelled_left(float distance_to_increase)
+void Motor::incrementDistanceTravelledLeft(float distanceToIncrease)
 {
-    distance_travelled_left = distance_travelled_left + distance_to_increase;
+    distanceTravelledLeft = distanceTravelledLeft + distanceToIncrease;
 }
 
-float Motor::get_distance_travelled_left()
+float Motor::getDistanceTravelledLeft()
 {
-    return distance_travelled_left;
+    return distanceTravelledLeft;
 }
 
-void Motor::set_distance_travelled_right(float distance_to_set)
+void Motor::setDistanceTravelledRight(float distance_to_set)
 {
-    distance_travelled_right = distance_to_set;
+    distanceTravelledRight = distance_to_set;
 }
 
-void Motor::increment_distance_travelled_right(float distance_to_increase)
+void Motor::incrementDistanceTravelledRight(float distanceToIncrease)
 {
-    distance_travelled_right = distance_travelled_right + distance_to_increase;
+    distanceTravelledRight = distanceTravelledRight + distanceToIncrease;
 }
 
-float Motor::get_distance_travelled_right()
+float Motor::getDistanceTravelledRight()
 {
-    return distance_travelled_right;
+    return distanceTravelledRight;
 }
 
 
