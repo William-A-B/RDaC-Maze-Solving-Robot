@@ -12,8 +12,8 @@
 
 // Radius of wheels from centre of robot to centre of wheels
 #define ROBOT_WHEEL_RADIUS 8.0f
-#define MAX_IR_DISTANCE 71.45f // 63.75 max distance from sensor reference point. 71 from robot centre
-#define MAX_USONIC_DISTANCE 120.0f
+#define MAX_IR_DISTANCE 52.0f // 63.75 max distance from sensor reference point. 71.45f from robot centre
+#define MAX_USONIC_DISTANCE 52.0f // 120.0f originally
 // #define DEFAULT_ROBOT_SPEED 0.75f
 #define DEFAULT_ROBOT_SPEED 0.50f
 
@@ -21,6 +21,7 @@
 #define MIN_IR_DIST_REAR 16.0f
 #define MIN_USONIC_DIST 16.0f // Minimum distance for USonic sensor to start detecting objects
 
+#define DEFAULT_AVG_SENSOR_READINGS 3
 
 struct Position
 {
@@ -91,23 +92,40 @@ public:
      */
     void rotateRobot(int degrees, bool ignoreBearingUpdate);
 
-
 	void determineDirection();
 
 	void moveForwards();
 
 	void stopMoving();
 
+	void leftAndForwards();
+
+	void rightAndForwards();
+
+	void solveKnownMaze();
+
+	/**
+	 * @brief Starts the robot driving forwards at its default speed of 0.5
+	 */
+    void driveForwards();
+
 
     // VARIABLE DECLARATIONS
 
+	/**
+	 * @brief 
+	 * 
+	 */
     enum RobotState
 	{
 		STATE_TESTING,
 		STATE_SETUP,
 		STATE_LOCATE,
 		STATE_SOLVE,
+		STATE_SOLVE_KNOWN_MAZE,
 		STATE_DETERMINE_DIRECTION,
+		STATE_LEFT_AND_FORWARD,
+		STATE_RIGHT_AND_FORWARD,
 		STATE_STOP,
 		STATE_FORWARD,
 		STATE_BACKWARD,
@@ -207,6 +225,14 @@ private:
 	 */
 	int adjustedMapDirection();
 
+	/**
+	 * @brief Runs the algorithm for the robot to solve the maze via following
+	 * the left hand wall until it reaches the end.
+	 */
+	void runWallFollowingAlgorithm();
+
+	void correctOrientationWall();
+
 
 	// VARIABLE DECLARATIONS
 
@@ -223,6 +249,7 @@ private:
 		FOLLOW_WALL,
 		DIRECT_AND_AROUND,
 		NAVIGATE_MAP,
+		KNOWN_MAZE,
 	} algorithm;
 
 	/**

@@ -16,7 +16,7 @@ Joystick my_joystick;
 
 bool continue_running = true;
 
-
+void waitForSerial();
 
 /**
  * @brief The setup function runs once when you press reset or power the board
@@ -32,8 +32,8 @@ void setup()
 	// Setup for robot that is run once at the very start
 	myRobot.initialSetup();
 
-	// myRobot.currentState = myRobot.STATE_TESTING;
-	myRobot.currentState = myRobot.STATE_SETUP;
+	// myRobot.currentState = myRobot.RobotState::STATE_TESTING;
+	myRobot.currentState = myRobot.RobotState::STATE_SETUP;
 }
 
 /**
@@ -44,6 +44,7 @@ void loop()
 {
 	if (my_joystick.check_button_press() == 3)
 	{
+		// waitForSerial();
 		switch (myRobot.currentState)
 		{
 			case myRobot.STATE_TESTING:
@@ -57,8 +58,17 @@ void loop()
 			case myRobot.STATE_SOLVE:
 				myRobot.solveMaze();
 				break;
+			case myRobot.STATE_SOLVE_KNOWN_MAZE:
+				myRobot.solveKnownMaze();
+				break;
 			case myRobot.STATE_DETERMINE_DIRECTION:
 				myRobot.determineDirection();
+				break;
+			case myRobot.STATE_LEFT_AND_FORWARD:
+				myRobot.leftAndForwards();
+				break;
+			case myRobot.STATE_RIGHT_AND_FORWARD:
+				myRobot.rightAndForwards();
 				break;
 			case myRobot.STATE_STOP:
 				myRobot.stopMoving();
@@ -113,3 +123,8 @@ void loop()
 	// }
 }
 
+void waitForSerial(){
+	while(Serial.available()){Serial.read();}
+	while (!Serial.available()) { }
+	Serial.read();
+}

@@ -173,6 +173,13 @@ void Map::updateRobotPosition(float robotXCoord, float robotYCoord)
 	{
 		robotHistoryCount = 0;
 	}
+
+	Serial.println("\nupdateRobotPosition");
+	Serial.print("( ");
+	Serial.print(robotCurrentPosition.xGridSquare);
+	Serial.print(", ");
+	Serial.print(robotCurrentPosition.yGridSquare);
+	Serial.println(" )");
 }
 
 /**

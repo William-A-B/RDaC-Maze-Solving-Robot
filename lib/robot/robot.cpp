@@ -8,27 +8,22 @@
  */
 void Robot::test()
 {
-	// moveRobot(40.0f);
-	// rotateRobot(-90);
-	// moveRobot(20.0f);
-	// rotateRobot(-90);
-	// moveRobot(40.0f);
-	// rotateRobot(-90);
-	// moveRobot(20.0f);
+	float frontSensorDistance = mySensors.read_averaged_IR_sensor_front(DEFAULT_AVG_SENSOR_READINGS);
+	float backSensorDistance = mySensors.read_averaged_IR_sensor_back(DEFAULT_AVG_SENSOR_READINGS);
+	float leftSensorDistance = mySensors.read_averaged_usonic_sensor_left(DEFAULT_AVG_SENSOR_READINGS);
+	float rightSensorDistance = mySensors.read_averaged_usonic_sensor_right(DEFAULT_AVG_SENSOR_READINGS);
 
-	moveRobot(10.0f);
-	rotateRobot(-90);
-	moveRobot(10.0f);
-	rotateRobot(-90);
-	moveRobot(10.0f);
-	rotateRobot(-90);
-	moveRobot(10.0f);
-	rotateRobot(-90);
+	Serial.println("Sensor distances to add to map");
+	Serial.print("F: ");
+	Serial.print(frontSensorDistance);
+	Serial.print(", B: ");
+	Serial.print(backSensorDistance);
+	Serial.print(", L: ");
+	Serial.print(leftSensorDistance);
+	Serial.print(", R: ");
+	Serial.println(rightSensorDistance);
 
-	Serial.println(mySensors.read_averaged_IR_sensor_front(1));
-	//rotateRobot(-2);
-
-	wait_us(2000000);
+	wait_us(200000);
 
 }
 
@@ -124,7 +119,9 @@ void Robot::setup()
  */
 void Robot::solveMaze()
 {
-	algorithm = NAVIGATE_MAP;
+	// algorithm = NAVIGATE_MAP;
+	algorithm = KNOWN_MAZE;
+	// algorithm = FOLLOW_WALL;
 
 	if (algorithm == DIRECT_AND_AROUND)
 	{
@@ -135,6 +132,45 @@ void Robot::solveMaze()
 		// runShortestNavigationAlgorithm();
 		currentState = RobotState::STATE_DETERMINE_DIRECTION;
 	}
+	else if (algorithm == KNOWN_MAZE)
+	{
+		currentState = RobotState::STATE_SOLVE_KNOWN_MAZE;
+	}
+	else if (algorithm == FOLLOW_WALL)
+	{
+		runWallFollowingAlgorithm();
+	}
+}
+
+void Robot::solveKnownMaze()
+{
+	// Distances too big and causing the "not enough free space ahead", so it needs to be removed for this algorithm
+	Serial.println("Start");
+	Serial.println("Right");
+	rotateRobot(90, true);
+	Serial.println("Forwards");
+	moveRobot(45.0f);
+	Serial.println("Left");
+	rotateRobot(-90, true);
+	Serial.println("Forwards");
+	moveRobot(45.0f);
+	Serial.println("Left");
+	rotateRobot(-90, true);
+	Serial.println("Forwards");
+	moveRobot(48.0f);
+	Serial.println("Right");
+	rotateRobot(90, true);
+	Serial.println("Forwards");
+	moveRobot(59.0f);
+	Serial.println("Right");
+	rotateRobot(90, true);
+	Serial.println("Forwards");
+	moveRobot(58.0f);
+	Serial.println("Left");
+	rotateRobot(-90, true);
+	Serial.println("Forwards");
+	moveRobot(55.0f);
+	Serial.println("End");
 }
 
 void Robot::runShortestNavigationAlgorithm()
@@ -162,12 +198,12 @@ void Robot::runShortestNavigationAlgorithm()
 		myMap.displayRobotHistory();
 		myMap.displayMap();
 
-		if (this->checkSideSpaceLeft(1))
+		if (this->checkSideSpaceLeft(DEFAULT_AVG_SENSOR_READINGS))
 		{
 			setRGBLED(1, 1, 0);
 			this->rotateRobot(-90);
 		}
-		else if (this->checkSideSpaceRight(1))
+		else if (this->checkSideSpaceRight(DEFAULT_AVG_SENSOR_READINGS))
 		{
 			setRGBLED(1, 1, 0);
 			this->rotateRobot(90);
@@ -252,12 +288,12 @@ void Robot::runDirectAlgorithm()
 			Serial.println("Disconnected from Client, stopping moving and now turning");
 		}
 
-		if (this->checkSideSpaceLeft(1))
+		if (this->checkSideSpaceLeft(DEFAULT_AVG_SENSOR_READINGS))
 		{
 			setRGBLED(1, 1, 0);
 			this->rotateRobot(-90);
 		}
-		else if (this->checkSideSpaceRight(1))
+		else if (this->checkSideSpaceRight(DEFAULT_AVG_SENSOR_READINGS))
 		{
 			setRGBLED(1, 1, 0);
 			this->rotateRobot(90);
@@ -295,6 +331,103 @@ void Robot::runDirectAlgorithm()
 	}
 }
 
+/**
+ * @brief Runs the algorithm for the robot to solve the maze via following
+ * the left hand wall until it reaches the end.
+ */
+void Robot::runWallFollowingAlgorithm()
+{
+	Serial.println("\nrunWallFollowingAlgorithm\n");
+
+	bool reachedNextWall = false;
+
+	while (this->checkSideSpaceLeft(1) == false)
+	{	
+		reachedNextWall = false;
+		//this->driveForwards();
+		//correctOrientationWall();
+		if (this->checkRouteAhead(-1))
+		{
+			setRGBLED(1, 0, 1);
+			Serial.println("Free space ahead");
+			Serial.println("Driving forwards\n\n");
+			this->driveForwards();
+		}
+		else
+		{
+			if (this->checkSideSpaceLeft(1) == false)
+			{
+				setRGBLED(0, 1, 1);
+				Serial.println("No space ahead and wall on left");
+				Serial.println("Turning Right\n\n");
+				this->rotateRobot(90, true);
+				this->driveForwards();
+			}
+		}
+	}
+
+	if (this->checkSideSpaceLeft(1) == true)
+	{
+		setRGBLED(1, 1, 0);
+		Serial.println("Reached end of left wall");
+		Serial.println("Turning left to continue along next wall\n\n");
+		
+		this->moveRobot(13.0f);
+		this->rotateRobot(-90, true);
+		moveRobot(16.0f);
+
+		// while (!reachedNextWall)
+		// {
+		// 	this->driveForwards();
+		// 	if (!this->checkRouteAhead(-1))
+		// 	{
+		// 		this->stopMoving();
+		// 		break;
+		// 	}
+		// 	if (!this->checkSideSpaceLeft(1))
+		// 	{
+		// 		reachedNextWall = true;
+		// 		this->stopMoving();
+		// 		wait_us(500000);
+		// 	}
+		// }
+
+		// this->moveRobot(80.0f);
+		// this->rotateRobot(-90);
+		// this->moveRobot(80.0f);
+	}
+}
+
+void Robot::correctOrientationWall()
+{
+	float leftSensorDistance = mySensors.read_averaged_usonic_sensor_left(DEFAULT_AVG_SENSOR_READINGS);
+	if (leftSensorDistance > MIN_USONIC_DIST + 7.0f)
+		rotateRobot(-2, true);
+	else if (leftSensorDistance < MIN_USONIC_DIST)
+		rotateRobot(2, true);
+}
+
+/**
+ * @brief Starts the robot driving forwards at its default speed of 0.5
+ */
+void Robot::driveForwards()
+{
+	myMotors.setDirection(myMotors.DIR_FORWARDS);
+	myMotors.setSpeed(DEFAULT_ROBOT_SPEED);
+	myMotors.drive(0);
+}
+
+void Robot::leftAndForwards()
+{
+	rotateRobot(-90);
+	currentState = RobotState::STATE_FORWARD;
+}
+
+void Robot::rightAndForwards()
+{
+	rotateRobot(90);
+	currentState = RobotState::STATE_FORWARD;
+}
 
 void Robot::moveHelper()
 {
@@ -317,7 +450,7 @@ void Robot::moveHelper()
 	processSensorInfo();
 
 	myMap.displayMap();
-	myMap.displayRobotHistory();
+	// myMap.displayRobotHistory();
 }
 
 
@@ -543,8 +676,8 @@ void Robot::calculateStartingLocation()
 	Serial.println("\ncalculateStartingLocation");
 	
 	// float frontSensorDistance = mySensors.read_averaged_IR_sensor_front(5);
-	float backSensorDistance = mySensors.read_averaged_IR_sensor_back(5);
-	float leftSensorDistance = mySensors.read_averaged_usonic_sensor_left(5);
+	float backSensorDistance = mySensors.read_averaged_IR_sensor_back(DEFAULT_AVG_SENSOR_READINGS);
+	float leftSensorDistance = mySensors.read_averaged_usonic_sensor_left(DEFAULT_AVG_SENSOR_READINGS);
 	// float rightSensorDistance = mySensors.read_averaged_usonic_sensor_right(5);
 
     // Calculate direction robot is facing
@@ -671,7 +804,7 @@ void Robot::updateBearing(int angle_to_add)
  */
 bool Robot::checkRouteAhead(float distanceToMove)
 {
-	float distanceToObjectsFront = mySensors.read_averaged_IR_sensor_front(1);
+	float distanceToObjectsFront = mySensors.read_averaged_IR_sensor_front(DEFAULT_AVG_SENSOR_READINGS);
 
 	if (distanceToMove == -1.0f)
 	{
@@ -773,6 +906,7 @@ void Robot::updateCoordinateLocation()
 	//robotBLE.updateRobotLocationInfo(bearing, currentPosition.xCoordinate, currentPosition.yCoordinate);
 
 	myMap.updateRobotPosition(currentPosition.xCoordinate, currentPosition.yCoordinate);
+
 }
 
 void Robot::processSensorInfo()
@@ -780,10 +914,20 @@ void Robot::processSensorInfo()
 	if (verbose)
 		Serial.println("\nprocessSensorInfo\n");
 
-	float frontSensorDistance = mySensors.read_averaged_IR_sensor_front(1);
-	float backSensorDistance = mySensors.read_averaged_IR_sensor_back(1);
-	float leftSensorDistance = mySensors.read_averaged_usonic_sensor_left(1);
-	float rightSensorDistance = mySensors.read_averaged_usonic_sensor_right(1);
+	float frontSensorDistance = mySensors.read_averaged_IR_sensor_front(DEFAULT_AVG_SENSOR_READINGS);
+	float backSensorDistance = mySensors.read_averaged_IR_sensor_back(DEFAULT_AVG_SENSOR_READINGS);
+	float leftSensorDistance = mySensors.read_averaged_usonic_sensor_left(DEFAULT_AVG_SENSOR_READINGS);
+	float rightSensorDistance = mySensors.read_averaged_usonic_sensor_right(DEFAULT_AVG_SENSOR_READINGS);
+
+	Serial.println("Sensor distances to add to map");
+	Serial.print("F: ");
+	Serial.print(frontSensorDistance);
+	Serial.print(", B: ");
+	Serial.print(backSensorDistance);
+	Serial.print(", L: ");
+	Serial.print(leftSensorDistance);
+	Serial.print(", R: ");
+	Serial.println(rightSensorDistance);
 
 	if (frontSensorDistance >= MAX_IR_DISTANCE)
 		frontSensorDistance = -1.0f;
@@ -807,16 +951,16 @@ void Robot::correctOrientation()
 	if (verbose)
 		Serial.println("\ncorrectOrientation");
 
-	float turningAngle = 5.0f;
-	float originalSensorDistance = mySensors.read_averaged_IR_sensor_front(5);
+	float turningAngle = 10.0f;
+	float originalSensorDistance = mySensors.read_averaged_IR_sensor_front(DEFAULT_AVG_SENSOR_READINGS);
 
 	rotateRobot((int)(-1.0f*turningAngle), true);
 
-	float adjLeftSensorDistance = mySensors.read_averaged_IR_sensor_front(5);
+	float adjLeftSensorDistance = mySensors.read_averaged_IR_sensor_front(DEFAULT_AVG_SENSOR_READINGS);
 
 	rotateRobot((int)(2.0f*turningAngle), true);
 
-	float adjRightSensorDistance = mySensors.read_averaged_IR_sensor_front(5);
+	float adjRightSensorDistance = mySensors.read_averaged_IR_sensor_front(DEFAULT_AVG_SENSOR_READINGS);
 
 	if (verbose)
 	{
@@ -903,9 +1047,13 @@ void Robot::correctOrientationHelper(float a, float b, float aC, bool leftOfCent
 
 	// If robot going towards right, then apply a negative rotation
 	if (leftOfCentre == false)
+	{
+		rotAngle = rotAngle + (2.0f * aC);
 		rotAngle = rotAngle * -1.0f;
-	
-	rotateRobot(rotAngle, true);
+	}
+	rotAngle = rotAngle / 2.0f;
+		
+	rotateRobot((int)rotAngle, true);
 
 	Serial.print("\n\nAdjustment Angle ");
 	Serial.println(rotAngle);
@@ -943,13 +1091,13 @@ void Robot::determineDirection()
 			forwardsDistance = myMap.determineDistanceToFinish(sensorAdjustment);
 	}
 
-	if (checkSideSpaceLeft(1) == true)
+	if (checkSideSpaceLeft(5) == true)
 	{
 		if (myMap.checkNextGridSpace(sensorAdjustment+3) == true)
 			leftDistance = myMap.determineDistanceToFinish(sensorAdjustment+3);
 	}
 
-	if (checkSideSpaceRight(1) == true)
+	if (checkSideSpaceRight(5) == true)
 	{
 		if (myMap.checkNextGridSpace(sensorAdjustment+1) == true)
 			rightDistance = myMap.determineDistanceToFinish(sensorAdjustment+1);
@@ -962,11 +1110,21 @@ void Robot::determineDirection()
 		{
 			currentState = RobotState::STATE_FORWARD;
 			Serial.println("FORWARD 1");
+			Serial.print(leftDistance);
+			Serial.print(", ");
+			Serial.print(forwardsDistance);
+			Serial.print(", ");
+			Serial.println(rightDistance);
 		}
 		else
 		{
-			currentState = RobotState::STATE_LEFT;
-			Serial.println("LEFT");
+			currentState = RobotState::STATE_LEFT_AND_FORWARD;
+			Serial.println("LEFT AND FORWARD");
+			Serial.print(leftDistance);
+			Serial.print(", ");
+			Serial.print(forwardsDistance);
+			Serial.print(", ");
+			Serial.println(rightDistance);
 		}
 	}
 	// Right smaller than left
@@ -976,14 +1134,21 @@ void Robot::determineDirection()
 		{
 			currentState = RobotState::STATE_FORWARD;
 			Serial.println("FORWARD 2");
+			Serial.print(leftDistance);
+			Serial.print(", ");
 			Serial.print(forwardsDistance);
 			Serial.print(", ");
 			Serial.println(rightDistance);
 		}
 		else
 		{
-			currentState = RobotState::STATE_RIGHT;
-			Serial.println("RIGHT");
+			currentState = RobotState::STATE_RIGHT_AND_FORWARD;
+			Serial.println("RIGHT AND FORWARD");
+			Serial.print(leftDistance);
+			Serial.print(", ");
+			Serial.print(forwardsDistance);
+			Serial.print(", ");
+			Serial.println(rightDistance);
 		}
 	}
 }
