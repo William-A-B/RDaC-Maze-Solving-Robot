@@ -119,8 +119,8 @@ void Robot::setup()
  */
 void Robot::solveMaze()
 {
-	// algorithm = NAVIGATE_MAP;
-	algorithm = KNOWN_MAZE;
+	algorithm = NAVIGATE_MAP;
+	// algorithm = KNOWN_MAZE;
 	// algorithm = FOLLOW_WALL;
 
 	if (algorithm == DIRECT_AND_AROUND)
@@ -1069,6 +1069,8 @@ void Robot::setRGBLED(int red, int green, int blue)
 
 void Robot::determineDirection()
 {
+	Serial.println("\nDetermining Direction: Next Step Forwards\n");
+
 	float forwardsDistance = 99999.9f;
 	float leftDistance = 99999.9f;
 	float rightDistance = 99999.9f;
@@ -1088,19 +1090,25 @@ void Robot::determineDirection()
 	if (checkRouteAhead(distanceToMoveForwards) == true)
 	{
 		if (myMap.checkNextGridSpace(sensorAdjustment) == true)
+		{
 			forwardsDistance = myMap.determineDistanceToFinish(sensorAdjustment);
+		}
 	}
 
 	if (checkSideSpaceLeft(5) == true)
 	{
 		if (myMap.checkNextGridSpace(sensorAdjustment+3) == true)
+		{
 			leftDistance = myMap.determineDistanceToFinish(sensorAdjustment+3);
+		}
 	}
 
 	if (checkSideSpaceRight(5) == true)
 	{
 		if (myMap.checkNextGridSpace(sensorAdjustment+1) == true)
+		{
 			rightDistance = myMap.determineDistanceToFinish(sensorAdjustment+1);
+		}
 	}
 
 	// Left smaller than Right

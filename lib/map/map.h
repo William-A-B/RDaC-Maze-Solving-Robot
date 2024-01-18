@@ -5,15 +5,22 @@
 #include <mbed/mbed.h>
 #include "errorflag.h"
 
-// Default Maze Size
-#define MAP_WIDTH_X 32
-#define MAP_HEIGHT_Y 42
+// Default Maze Size for Labs
+// #define MAP_WIDTH_X 32
+// #define MAP_HEIGHT_Y 42
 
-// Reduced Maze Size
+// Reduced Maze Size for Home
 // 100cm width
 // 130cm height
 // #define MAP_WIDTH_X 22
 // #define MAP_HEIGHT_Y 28
+
+// Reduced Maze Size for Home York
+// 80cm Width
+// 100cm Height
+#define MAP_WIDTH_X 16
+#define MAP_HEIGHT_Y 20
+
 
 #define OBSTACLE 3
 #define BORDER 2

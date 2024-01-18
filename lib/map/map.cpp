@@ -9,21 +9,20 @@ Map::Map()
 
 	robotHistoryCount = 0;
 
-	// Setup the occupancy grid array to initialise the maze prior to the robot moving
-	setupOccupancyGrid();
-
 	// Add finishing position
 	// mazeFinish.xGridSquare = 15;
 	// mazeFinish.yGridSquare = 39;
-	mazeFinish.xGridSquare = 15;
-	mazeFinish.yGridSquare = 20;
+	mazeFinish.xGridSquare = MAP_WIDTH_X / 2;
+	mazeFinish.yGridSquare = MAP_HEIGHT_Y - 4;
+
+	// Setup the occupancy grid array to initialise the maze prior to the robot moving
+	setupOccupancyGrid();
 }
 
 void Map::initialSetup(int xGridSquareInitial, int yGridSquareInitial)
 {
 	robotCurrentPosition.xGridSquare = xGridSquareInitial;
 	robotCurrentPosition.yGridSquare = yGridSquareInitial;
-	
 }
 
 /**
@@ -54,6 +53,8 @@ void Map::setupOccupancyGrid()
 		this->occupancyGrid[0][i] = OBSTACLE;
 		this->occupancyGrid[MAP_WIDTH_X-1][i] = OBSTACLE;
 	}
+
+	occupancyGrid[mazeFinish.xGridSquare][mazeFinish.yGridSquare] = 4;
 }
 
 
@@ -68,7 +69,7 @@ void Map::addObstaclesToMap(float frontSensorDistance, float backSensorDistance,
 	const int rPosX = robotCurrentPosition.xGridSquare + 1;
 	const int rPosY = robotCurrentPosition.yGridSquare + 1;
 
-	int border = 1;
+	int border = 2;
 
 	// Add other bearing conditions
 	// Make sure object position adding is not outside the array
@@ -291,12 +292,17 @@ bool Map::checkNextGridSpace(int direction)
 	{
 		direction = direction - 4;
 	}
+	// Serial.println("Map when checking next grid space"); // TEMP
+	// displayMap();
 
 	if (direction == 0)
 	{
 		int occupancy = occupancyGrid[robotCurrentPosition.xGridSquare][robotCurrentPosition.yGridSquare+1];
 		if (occupancy == FREE || occupancy == ROBOT)
+		{
+			Serial.println("No border or obstacle");
 			return true;
+		}
 		if (occupancy == BORDER)
 			Serial.println("Border North");
 		if (occupancy == OBSTACLE)
@@ -306,7 +312,10 @@ bool Map::checkNextGridSpace(int direction)
 	{
 		int occupancy = occupancyGrid[robotCurrentPosition.xGridSquare+1][robotCurrentPosition.yGridSquare];
 		if (occupancy == FREE || occupancy == ROBOT)
+		{
+			Serial.println("No border or obstacle");
 			return true;
+		}
 		if (occupancy == BORDER)
 			Serial.println("Border East");
 		if (occupancy == OBSTACLE)
@@ -316,7 +325,10 @@ bool Map::checkNextGridSpace(int direction)
 	{
 		int occupancy = occupancyGrid[robotCurrentPosition.xGridSquare][robotCurrentPosition.yGridSquare-1];
 		if (occupancy == FREE || occupancy == ROBOT)
+		{
+			Serial.println("No border or obstacle");
 			return true;
+		}
 		if (occupancy == BORDER)
 			Serial.println("Border South");
 		if (occupancy == OBSTACLE)
@@ -326,7 +338,10 @@ bool Map::checkNextGridSpace(int direction)
 	{
 		int occupancy = occupancyGrid[robotCurrentPosition.xGridSquare-1][robotCurrentPosition.yGridSquare];
 		if (occupancy == FREE || occupancy == ROBOT)
+		{
+			Serial.println("No border or obstacle");
 			return true;
+		}
 		if (occupancy == BORDER)
 			Serial.println("Border West");
 		if (occupancy == OBSTACLE)
