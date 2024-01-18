@@ -6,8 +6,12 @@
 #include "errorflag.h"
 
 // Default Maze Size for Labs
-// #define MAP_WIDTH_X 32
-// #define MAP_HEIGHT_Y 42
+#define MAP_WIDTH_X 32
+#define MAP_HEIGHT_Y 42
+
+// Maze size for 2cm grids
+// #define MAP_WIDTH_X 77
+// #define MAP_HEIGHT_Y 102
 
 // Reduced Maze Size for Home
 // 100cm width
@@ -18,12 +22,14 @@
 // Reduced Maze Size for Home York
 // 80cm Width
 // 100cm Height
-#define MAP_WIDTH_X 16
-#define MAP_HEIGHT_Y 20
+// #define MAP_WIDTH_X 16
+// #define MAP_HEIGHT_Y 20
 
+#define MAP_GRID_SIZE 5
 
-#define OBSTACLE 3
-#define BORDER 2
+#define OBSTACLE 4
+#define BORDER 3
+#define PARTIAL_BORDER 2
 #define ROBOT 1
 #define FREE 0
 
@@ -81,7 +87,11 @@ public:
 
     float determineDistanceToFinish(int direction);
 
-    bool checkNextGridSpace(int direction);
+    int checkNextGridSpace(int direction);
+
+    bool checkIfReachedFinish();
+
+    void retraceStepBack(int *bearingToHead);
 
 
 private:
@@ -92,7 +102,7 @@ private:
 
     float calculateLengthToFinish(int xPos, int yPos);
 
-    void addObstacleBorder(int xCoord, int yCoord, int extent);
+    void addObstacleBorder(int xCoord, int yCoord, int extent, int partialBorder);
 
 
     // VARIABLE DEFINITIONS

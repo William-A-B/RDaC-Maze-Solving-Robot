@@ -109,6 +109,8 @@ public:
 	 */
     void driveForwards();
 
+	void retraceRouteBack();
+
 
     // VARIABLE DECLARATIONS
 
@@ -131,6 +133,7 @@ public:
 		STATE_BACKWARD,
 		STATE_LEFT,
 		STATE_RIGHT,
+		STATE_RETRACE_ROUTE,
 		STATE_END,
 	} currentState;
 

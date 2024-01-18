@@ -1087,78 +1087,98 @@ void Robot::determineDirection()
 		currentState = RobotState::STATE_STOP;
 	}
 
-	if (checkRouteAhead(distanceToMoveForwards) == true)
+	if (myMap.checkIfReachedFinish() == true)
 	{
-		if (myMap.checkNextGridSpace(sensorAdjustment) == true)
-		{
-			forwardsDistance = myMap.determineDistanceToFinish(sensorAdjustment);
-		}
+		Serial.println("Reached End of Maze! Starting to Retrace Steps Back");
+		currentState = RobotState::STATE_RETRACE_ROUTE;
 	}
-
-	if (checkSideSpaceLeft(5) == true)
-	{
-		if (myMap.checkNextGridSpace(sensorAdjustment+3) == true)
-		{
-			leftDistance = myMap.determineDistanceToFinish(sensorAdjustment+3);
-		}
-	}
-
-	if (checkSideSpaceRight(5) == true)
-	{
-		if (myMap.checkNextGridSpace(sensorAdjustment+1) == true)
-		{
-			rightDistance = myMap.determineDistanceToFinish(sensorAdjustment+1);
-		}
-	}
-
-	// Left smaller than Right
-	if (leftDistance <= rightDistance)
-	{
-		if (forwardsDistance <= leftDistance)
-		{
-			currentState = RobotState::STATE_FORWARD;
-			Serial.println("FORWARD 1");
-			Serial.print(leftDistance);
-			Serial.print(", ");
-			Serial.print(forwardsDistance);
-			Serial.print(", ");
-			Serial.println(rightDistance);
-		}
-		else
-		{
-			currentState = RobotState::STATE_LEFT_AND_FORWARD;
-			Serial.println("LEFT AND FORWARD");
-			Serial.print(leftDistance);
-			Serial.print(", ");
-			Serial.print(forwardsDistance);
-			Serial.print(", ");
-			Serial.println(rightDistance);
-		}
-	}
-	// Right smaller than left
 	else
 	{
-		if (forwardsDistance <= rightDistance)
+		if (checkRouteAhead(distanceToMoveForwards) == true)
 		{
-			currentState = RobotState::STATE_FORWARD;
-			Serial.println("FORWARD 2");
-			Serial.print(leftDistance);
-			Serial.print(", ");
-			Serial.print(forwardsDistance);
-			Serial.print(", ");
-			Serial.println(rightDistance);
+			if (myMap.checkNextGridSpace(sensorAdjustment) == true)
+			{
+				forwardsDistance = myMap.determineDistanceToFinish(sensorAdjustment);
+			}
+			else if (myMap.checkNextGridSpace(sensorAdjustment) == 2)
+			{
+				forwardsDistance = myMap.determineDistanceToFinish(sensorAdjustment);
+			}
 		}
+
+		if (checkSideSpaceLeft(5) == true)
+		{
+			if (myMap.checkNextGridSpace(sensorAdjustment+3) == true)
+			{
+				leftDistance = myMap.determineDistanceToFinish(sensorAdjustment+3);
+			}
+			// else if (myMap.checkNextGridSpace(sensorAdjustment+3) == 2)
+			// {
+			// 	leftDistance = myMap.determineDistanceToFinish(sensorAdjustment+3);
+			// }
+		}
+
+		if (checkSideSpaceRight(5) == true)
+		{
+			if (myMap.checkNextGridSpace(sensorAdjustment+1) == true)
+			{
+				rightDistance = myMap.determineDistanceToFinish(sensorAdjustment+1);
+			}
+			// else if (myMap.checkNextGridSpace(sensorAdjustment+1) == 2)
+			// {
+			// 	rightDistance = myMap.determineDistanceToFinish(sensorAdjustment+1);
+			// }
+		}
+
+		// Left smaller than Right
+		if (leftDistance <= rightDistance)
+		{
+			if (forwardsDistance <= leftDistance)
+			{
+				currentState = RobotState::STATE_FORWARD;
+				Serial.println("FORWARD 1");
+				Serial.print(leftDistance);
+				Serial.print(", ");
+				Serial.print(forwardsDistance);
+				Serial.print(", ");
+				Serial.println(rightDistance);
+			}
+			else
+			{
+				currentState = RobotState::STATE_LEFT_AND_FORWARD;
+				Serial.println("LEFT AND FORWARD");
+				Serial.print(leftDistance);
+				Serial.print(", ");
+				Serial.print(forwardsDistance);
+				Serial.print(", ");
+				Serial.println(rightDistance);
+			}
+		}
+		// Right smaller than left
 		else
 		{
-			currentState = RobotState::STATE_RIGHT_AND_FORWARD;
-			Serial.println("RIGHT AND FORWARD");
-			Serial.print(leftDistance);
-			Serial.print(", ");
-			Serial.print(forwardsDistance);
-			Serial.print(", ");
-			Serial.println(rightDistance);
+			if (forwardsDistance <= rightDistance)
+			{
+				currentState = RobotState::STATE_FORWARD;
+				Serial.println("FORWARD 2");
+				Serial.print(leftDistance);
+				Serial.print(", ");
+				Serial.print(forwardsDistance);
+				Serial.print(", ");
+				Serial.println(rightDistance);
+			}
+			else
+			{
+				currentState = RobotState::STATE_RIGHT_AND_FORWARD;
+				Serial.println("RIGHT AND FORWARD");
+				Serial.print(leftDistance);
+				Serial.print(", ");
+				Serial.print(forwardsDistance);
+				Serial.print(", ");
+				Serial.println(rightDistance);
+			}
 		}
-	}
+	}	
 }
 
 /**
@@ -1187,6 +1207,21 @@ int Robot::adjustedMapDirection()
 	}
 	
 	return -1;
+}
+
+void Robot::retraceRouteBack()
+{
+	int bearingToMove = 0;
+	myMap.retraceStepBack(&bearingToMove);
+
+	if (bearingToMove == 0)
+	{
+		rotateRobot(bearingToMove - bearing);
+	}
+	else if (bearingToMove == 90)
+	{
+		rotateRobot(bearing - bearingToMove);
+	}
 }
 
 /**

@@ -84,6 +84,9 @@ void loop()
 			case myRobot.STATE_RIGHT:
 				myRobot.rotateRobot(90);
 				break;
+			case myRobot.STATE_RETRACE_ROUTE:
+				myRobot.retraceRouteBack();
+				break;
 			case myRobot.STATE_END:
 				set_button_state(0);
 				break;
