@@ -236,6 +236,8 @@ private:
 
 	void correctOrientationWall();
 
+	void rotateRobotToGivenDirection(int direction);
+
 
 	// VARIABLE DECLARATIONS
 

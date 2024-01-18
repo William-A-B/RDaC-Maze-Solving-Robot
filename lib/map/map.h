@@ -33,6 +33,8 @@
 #define ROBOT 1
 #define FREE 0
 
+#define MAX_POSITION_HISTORY 200
+
 
 struct GridPosition
 {
@@ -91,7 +93,11 @@ public:
 
     bool checkIfReachedFinish();
 
-    void retraceStepBack(int *bearingToHead);
+    int retraceStepBack();
+
+    void setTrackRobot(bool track);
+
+    bool getTrackRobot();
 
 
 private:
@@ -122,6 +128,8 @@ private:
     int robotHistoryCount;
 
     GridPosition mazeFinish;
+
+    bool trackRobot;
 
 
 

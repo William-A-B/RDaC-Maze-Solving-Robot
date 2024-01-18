@@ -446,11 +446,14 @@ void Robot::moveHelper()
 	// on the initial distance before moving
 	updateCoordinateLocation();
 
-	// Reads sensors to update map with any obstacles
-	processSensorInfo();
+	if (myMap.getTrackRobot() == true)
+	{
+		// Reads sensors to update map with any obstacles
+		processSensorInfo();
 
-	myMap.displayMap();
-	// myMap.displayRobotHistory();
+		myMap.displayMap();
+		// myMap.displayRobotHistory();
+	}
 }
 
 
@@ -664,6 +667,15 @@ void Robot::rotateRobot(int degrees, bool ignoreBearingUpdate)
 	// Stop robot moving and reset direction to forwards
 	myMotors.stopDriving();
 	myMotors.setDirection(myMotors.DIR_FORWARDS);
+}
+
+void Robot::rotateRobotToGivenDirection(int direction)
+{
+	direction = direction * 90;
+
+	int rotationAngle = direction - bearing;
+
+	rotateRobot(rotationAngle, false);
 }
 
 /**
@@ -1211,17 +1223,28 @@ int Robot::adjustedMapDirection()
 
 void Robot::retraceRouteBack()
 {
-	int bearingToMove = 0;
-	myMap.retraceStepBack(&bearingToMove);
+	myMap.setTrackRobot(false);
 
-	if (bearingToMove == 0)
+	// Ensure robot starts at centre of grid square
+	centreOnMapGrid();
+
+	int bearingToMove = 0;
+	int orientation = -1;
+
+	while (orientation != 5)
 	{
-		rotateRobot(bearingToMove - bearing);
+		orientation = myMap.retraceStepBack();
+		
+		if (orientation == -1)
+			continue;
+		
+		rotateRobotToGivenDirection(orientation);
+		moveHelper();
 	}
-	else if (bearingToMove == 90)
-	{
-		rotateRobot(bearing - bearingToMove);
-	}
+
+	rotateRobotToGivenDirection(0);
+
+	myMap.setTrackRobot(true);
 }
 
 /**

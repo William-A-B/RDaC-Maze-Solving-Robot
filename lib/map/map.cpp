@@ -9,6 +9,8 @@ Map::Map()
 
 	robotHistoryCount = 0;
 
+	trackRobot = true;
+
 	// Add finishing position
 	// mazeFinish.xGridSquare = 15;
 	// mazeFinish.yGridSquare = 39;
@@ -74,7 +76,7 @@ void Map::addObstaclesToMap(float frontSensorDistance, float backSensorDistance,
 
 	/**
 	 * @brief add obstacles and borders & partial borders based on the current orientation
-	 * @param partialBorder - directions
+	 * @param partialBorderDir - directions
 	 * 0 - North
 	 * 1 - South
 	 * 2 - West
@@ -139,11 +141,11 @@ void Map::addObstaclesToMap(float frontSensorDistance, float backSensorDistance,
 	}
 }
 
-void Map::addObstacleBorder(int xCoord, int yCoord, int extent, int partialBorder)
+void Map::addObstacleBorder(int xCoord, int yCoord, int extent, int partialBorderDir)
 {
 	for (int x = xCoord-extent; x <= xCoord+extent; x++)
 	{
-		// sbsb Change tox > 0 and Map_width_x - 1 because the outer edge is always obstacles
+		//Change tox > 0 and Map_width_x - 1 because the outer edge is always obstacles
 		if (x > 0 || x < MAP_WIDTH_X-1)
 		{
 			for (int y = yCoord-extent; y <= yCoord+extent; y++)
@@ -159,41 +161,24 @@ void Map::addObstacleBorder(int xCoord, int yCoord, int extent, int partialBorde
 					{
 						if (occupancyGrid[x][y] != OBSTACLE && occupancyGrid[x][y] != ROBOT)
 						{
-							// if (partialBorder == 0 && y >= yCoord)
-							// {	
-							// 	occupancyGrid[x][y] = PARTIAL_BORDER;
-							// }
-							// else if (partialBorder == 1 && y <= yCoord)
-							// {
-							// 	occupancyGrid[x][y] = PARTIAL_BORDER;
-							// }
-							// else if (partialBorder == 2 && x <= xCoord)
-							// {
-							// 	occupancyGrid[x][y] = PARTIAL_BORDER;
-							// }
-							// else if (partialBorder == 3 && x >= xCoord)
-							// {
-							// 	occupancyGrid[x][y] = PARTIAL_BORDER;
-							// }
-							// else
-							// {
-							// 	occupancyGrid[x][y] = BORDER;
-							// }
-
-							if (partialBorder == 0 && x == xCoord)
+							if (partialBorderDir == 0 && x == xCoord && y < yCoord)
 							{
+								// 0 = North
 								occupancyGrid[x][y] = BORDER;
 							}
-							else if (partialBorder == 1 && x == xCoord)
+							else if (partialBorderDir == 1 && x == xCoord && y > yCoord)
 							{
+								// 1 = South
 								occupancyGrid[x][y] = BORDER;
 							}
-							else if (partialBorder == 2 && y == yCoord)
+							else if (partialBorderDir == 2 && y == yCoord && x > xCoord)
 							{
+								// 2 = West
 								occupancyGrid[x][y] = BORDER;
 							}
-							else if (partialBorder == 3 && y == yCoord)
+							else if (partialBorderDir == 3 && y == yCoord && x < xCoord)
 							{
+								// 3 = East
 								occupancyGrid[x][y] = BORDER;
 							}
 							else 
@@ -214,17 +199,22 @@ void Map::updateRobotPosition(float robotXCoord, float robotYCoord)
 	robotCurrentPosition.xGridSquare = (robotXCoord / MAP_GRID_SIZE) + 1;
 	robotCurrentPosition.yGridSquare = (robotYCoord / MAP_GRID_SIZE) + 1;
 
-	robotPositionHistory[robotHistoryCount].xGridSquare = robotCurrentPosition.xGridSquare;
-	robotPositionHistory[robotHistoryCount].yGridSquare = robotCurrentPosition.yGridSquare;
-
-	occupancyGrid[robotCurrentPosition.xGridSquare][robotCurrentPosition.yGridSquare] = ROBOT;
-
-	robotHistoryCount++;
-
-	if (robotHistoryCount >=100)
+	if (trackRobot == true)
 	{
-		robotHistoryCount = 0;
+		robotPositionHistory[robotHistoryCount].xGridSquare = robotCurrentPosition.xGridSquare;
+		robotPositionHistory[robotHistoryCount].yGridSquare = robotCurrentPosition.yGridSquare;
+		
+		occupancyGrid[robotCurrentPosition.xGridSquare][robotCurrentPosition.yGridSquare] = ROBOT;
+
+		robotHistoryCount++;
+
+		if (robotHistoryCount >= MAX_POSITION_HISTORY)
+		{
+			robotHistoryCount = 0;
+		}
 	}
+
+	
 
 	Serial.println("\nupdateRobotPosition");
 	Serial.print("( ");
@@ -449,33 +439,110 @@ bool Map::checkIfReachedFinish()
 	const int finishX = mazeFinish.xGridSquare;
 	const int finishY = mazeFinish.yGridSquare;
 
-	if (currentPosX == finishX && currentPosY == finishY)
-		return true;
-	else if (currentPosX == finishX && currentPosY == finishY+1)
-		return true;
-	else if (currentPosX == finishX+1 && currentPosY == finishY+1)
-		return true;
-	else if (currentPosX == finishX+1 && currentPosY == finishY)
-		return true;
-	else if (currentPosX == finishX+1 && currentPosY == finishY-1)
-		return true;
-	else if (currentPosX == finishX && currentPosY == finishY-1)
-		return true;
-	else if (currentPosX == finishX-1 && currentPosY == finishY-1)
-		return true;
-	else if (currentPosX == finishX-1 && currentPosY == finishY)
-		return true;
-	else if (currentPosX == finishX-1 && currentPosY == finishY+1)
-		return true;
-	else
-		return false;
+	if (currentPosX > finishX - 1 && currentPosX < finishX + 1)
+	{
+		if (currentPosY > finishY - 1 && currentPosY < finishY + 1)
+			return true;
+	}
+
+	// if (currentPosX == finishX && currentPosY == finishY)
+	// 	return true;
+	// else if (currentPosX == finishX && currentPosY == finishY+1)
+	// 	return true;
+	// else if (currentPosX == finishX+1 && currentPosY == finishY+1)
+	// 	return true;
+	// else if (currentPosX == finishX+1 && currentPosY == finishY)
+	// 	return true;
+	// else if (currentPosX == finishX+1 && currentPosY == finishY-1)
+	// 	return true;
+	// else if (currentPosX == finishX && currentPosY == finishY-1)
+	// 	return true;
+	// else if (currentPosX == finishX-1 && currentPosY == finishY-1)
+	// 	return true;
+	// else if (currentPosX == finishX-1 && currentPosY == finishY)
+	// 	return true;
+	// else if (currentPosX == finishX-1 && currentPosY == finishY+1)
+	// 	return true;
+	// else
+	// 	return false;
 
 	return false;
 }
 
-void Map::retraceStepBack(int *bearingToHead)
+int Map::retraceStepBack()
 {
+	if (robotHistoryCount == 0)
+	{
+		return 5;
+	}
 
+	// Decrease robot history count
+	robotHistoryCount--;
+
+	int nextX = robotPositionHistory[robotHistoryCount].xGridSquare;
+	int nextY = robotPositionHistory[robotHistoryCount].yGridSquare;
+
+	int gridSquareDiff = 0;
+	int orientation = -1;
+
+	if (nextX == robotCurrentPosition.xGridSquare)
+	{
+		// Y value changed
+		gridSquareDiff = nextY - robotCurrentPosition.yGridSquare;
+
+		if (gridSquareDiff == 0)
+		{
+			// It's at the same location
+			orientation = -1;
+		}
+
+		if (gridSquareDiff < 0)
+		{
+			// South
+			orientation = 2;
+		}
+		else if (gridSquareDiff > 0)
+		{
+			// North
+			orientation = 0;
+		}
+	}
+	else if (nextY == robotCurrentPosition.yGridSquare)
+	{
+		// X value changed
+		gridSquareDiff = nextX - robotCurrentPosition.xGridSquare;
+
+		if (gridSquareDiff == 0)
+		{
+			// It's at the same location
+			orientation = -1;
+		}
+
+		if (gridSquareDiff < 0)
+		{
+			// West
+			orientation = 3;
+		}
+		else if (gridSquareDiff > 0)
+		{
+			// East
+			orientation = 1;
+		}
+	}
+
+	return orientation;
+
+
+}
+
+void Map::setTrackRobot(bool track)
+{
+	trackRobot = track;
+}
+
+bool Map::getTrackRobot()
+{
+	return trackRobot;
 }
 
 void Map::calculateShortestPath()
