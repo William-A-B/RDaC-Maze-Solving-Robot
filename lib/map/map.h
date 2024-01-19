@@ -27,6 +27,7 @@
 
 #define MAP_GRID_SIZE 5
 
+#define FINISH 5
 #define OBSTACLE 4
 #define BORDER 3
 #define PARTIAL_BORDER 2
@@ -99,6 +100,10 @@ public:
 
     bool getTrackRobot();
 
+    void setRobotStartingLocation(float xPos, float yPos);
+
+    int getRobotHistoryCount();
+
 
 private:
 
@@ -130,6 +135,8 @@ private:
     GridPosition mazeFinish;
 
     bool trackRobot;
+
+    GridPosition robotStartLocation;
 
 
 

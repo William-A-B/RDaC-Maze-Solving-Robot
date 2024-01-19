@@ -7,6 +7,9 @@ Map::Map()
 	robotCurrentPosition.xGridSquare = 0;
 	robotCurrentPosition.yGridSquare = 0;
 
+	robotStartLocation.xGridSquare = 0;
+	robotStartLocation.yGridSquare = 0;
+
 	robotHistoryCount = 0;
 
 	trackRobot = true;
@@ -14,8 +17,10 @@ Map::Map()
 	// Add finishing position
 	// mazeFinish.xGridSquare = 15;
 	// mazeFinish.yGridSquare = 39;
-	mazeFinish.xGridSquare = (MAP_WIDTH_X / 2);
-	mazeFinish.yGridSquare = MAP_HEIGHT_Y - 4;
+	// mazeFinish.xGridSquare = (MAP_WIDTH_X / 2);
+	// mazeFinish.yGridSquare = MAP_HEIGHT_Y - 7;
+	mazeFinish.xGridSquare = 23;
+	mazeFinish.yGridSquare = 14;
 
 	// Setup the occupancy grid array to initialise the maze prior to the robot moving
 	setupOccupancyGrid();
@@ -57,7 +62,7 @@ void Map::setupOccupancyGrid()
 	}
 
 	// Add finish position into the map to be able to visualise it
-	occupancyGrid[mazeFinish.xGridSquare][mazeFinish.yGridSquare] = 5;
+	occupancyGrid[mazeFinish.xGridSquare][mazeFinish.yGridSquare] = FINISH;
 }
 
 
@@ -351,7 +356,7 @@ int Map::checkNextGridSpace(int direction)
 	if (direction == 0)
 	{
 		int occupancy = occupancyGrid[robotCurrentPosition.xGridSquare][robotCurrentPosition.yGridSquare+1];
-		if (occupancy == FREE || occupancy == ROBOT)
+		if (occupancy == FREE || occupancy == ROBOT || occupancy == FINISH)
 		{
 			Serial.println("No border or obstacle");
 			return true;
@@ -370,7 +375,7 @@ int Map::checkNextGridSpace(int direction)
 	else if (direction == 1)
 	{
 		int occupancy = occupancyGrid[robotCurrentPosition.xGridSquare+1][robotCurrentPosition.yGridSquare];
-		if (occupancy == FREE || occupancy == ROBOT)
+		if (occupancy == FREE || occupancy == ROBOT || occupancy == FINISH)
 		{
 			Serial.println("No border or obstacle");
 			return true;
@@ -389,7 +394,7 @@ int Map::checkNextGridSpace(int direction)
 	else if (direction == 2)
 	{
 		int occupancy = occupancyGrid[robotCurrentPosition.xGridSquare][robotCurrentPosition.yGridSquare-1];
-		if (occupancy == FREE || occupancy == ROBOT)
+		if (occupancy == FREE || occupancy == ROBOT || occupancy == FINISH)
 		{
 			Serial.println("No border or obstacle");
 			return true;
@@ -408,7 +413,7 @@ int Map::checkNextGridSpace(int direction)
 	else if (direction == 3)
 	{
 		int occupancy = occupancyGrid[robotCurrentPosition.xGridSquare-1][robotCurrentPosition.yGridSquare];
-		if (occupancy == FREE || occupancy == ROBOT)
+		if (occupancy == FREE || occupancy == ROBOT || occupancy == FINISH)
 		{
 			Serial.println("No border or obstacle");
 			return true;
@@ -439,32 +444,36 @@ bool Map::checkIfReachedFinish()
 	const int finishX = mazeFinish.xGridSquare;
 	const int finishY = mazeFinish.yGridSquare;
 
-	if (currentPosX > finishX - 1 && currentPosX < finishX + 1)
-	{
-		if (currentPosY > finishY - 1 && currentPosY < finishY + 1)
-			return true;
-	}
+	// if (currentPosX >= finishX - 1 && currentPosX <= finishX + 1)
+	// {
+	// 	Serial.println("Correct X Finish position");
+	// 	if (currentPosY >= finishY - 1 && currentPosY <= finishY + 1)
+	// 	{
+	// 		Serial.println("Correct Y Finish position");
+	// 		return true;
+	// 	}
+	// }
 
-	// if (currentPosX == finishX && currentPosY == finishY)
-	// 	return true;
-	// else if (currentPosX == finishX && currentPosY == finishY+1)
-	// 	return true;
-	// else if (currentPosX == finishX+1 && currentPosY == finishY+1)
-	// 	return true;
-	// else if (currentPosX == finishX+1 && currentPosY == finishY)
-	// 	return true;
-	// else if (currentPosX == finishX+1 && currentPosY == finishY-1)
-	// 	return true;
-	// else if (currentPosX == finishX && currentPosY == finishY-1)
-	// 	return true;
-	// else if (currentPosX == finishX-1 && currentPosY == finishY-1)
-	// 	return true;
-	// else if (currentPosX == finishX-1 && currentPosY == finishY)
-	// 	return true;
-	// else if (currentPosX == finishX-1 && currentPosY == finishY+1)
-	// 	return true;
-	// else
-	// 	return false;
+	if (currentPosX == finishX && currentPosY == finishY)
+		return true;
+	else if (currentPosX == finishX && currentPosY == finishY+1)
+		return true;
+	else if (currentPosX == finishX+1 && currentPosY == finishY+1)
+		return true;
+	else if (currentPosX == finishX+1 && currentPosY == finishY)
+		return true;
+	else if (currentPosX == finishX+1 && currentPosY == finishY-1)
+		return true;
+	else if (currentPosX == finishX && currentPosY == finishY-1)
+		return true;
+	else if (currentPosX == finishX-1 && currentPosY == finishY-1)
+		return true;
+	else if (currentPosX == finishX-1 && currentPosY == finishY)
+		return true;
+	else if (currentPosX == finishX-1 && currentPosY == finishY+1)
+		return true;
+	else
+		return false;
 
 	return false;
 }
@@ -477,19 +486,25 @@ int Map::retraceStepBack()
 	}
 
 	// Decrease robot history count
+	Serial.println(robotHistoryCount);
 	robotHistoryCount--;
 
+	// Get the next grid to move to on the route back
 	int nextX = robotPositionHistory[robotHistoryCount].xGridSquare;
 	int nextY = robotPositionHistory[robotHistoryCount].yGridSquare;
 
 	int gridSquareDiff = 0;
 	int orientation = -1;
 
+	// Y value changes if next x is equal to current x
 	if (nextX == robotCurrentPosition.xGridSquare)
 	{
 		// Y value changed
+
+		// Calculate difference between next grid square and current grid square
 		gridSquareDiff = nextY - robotCurrentPosition.yGridSquare;
 
+		// Determine direction to turn towards
 		if (gridSquareDiff == 0)
 		{
 			// It's at the same location
@@ -507,11 +522,15 @@ int Map::retraceStepBack()
 			orientation = 0;
 		}
 	}
+	// X value changes if next y is equal to current y
 	else if (nextY == robotCurrentPosition.yGridSquare)
 	{
 		// X value changed
+
+		// Calculate difference between next grid square and current grid square
 		gridSquareDiff = nextX - robotCurrentPosition.xGridSquare;
 
+		// Determine direction to turn towards
 		if (gridSquareDiff == 0)
 		{
 			// It's at the same location
@@ -543,6 +562,17 @@ void Map::setTrackRobot(bool track)
 bool Map::getTrackRobot()
 {
 	return trackRobot;
+}
+
+void Map::setRobotStartingLocation(float xPos, float yPos)
+{
+	robotStartLocation.xGridSquare = xPos / 5;
+	robotStartLocation.yGridSquare = yPos / 5;
+}
+
+int Map::getRobotHistoryCount()
+{
+	return robotHistoryCount;
 }
 
 void Map::calculateShortestPath()

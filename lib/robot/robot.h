@@ -12,8 +12,8 @@
 
 // Radius of wheels from centre of robot to centre of wheels
 #define ROBOT_WHEEL_RADIUS 8.0f
-#define MAX_IR_DISTANCE 45.0f // 63.75 max distance from sensor reference point. 71.45f from robot centre
-#define MAX_USONIC_DISTANCE 45.0f // 120.0f originally
+#define MAX_IR_DISTANCE 30.0f // 63.75 max distance from sensor reference point. 71.45f from robot centre
+#define MAX_USONIC_DISTANCE 30.0f // 120.0f originally
 // #define DEFAULT_ROBOT_SPEED 0.75f
 #define DEFAULT_ROBOT_SPEED 0.50f
 
@@ -110,6 +110,8 @@ public:
     void driveForwards();
 
 	void retraceRouteBack();
+
+	void setRGBLED(int red, int green, int blue);
 
 
     // VARIABLE DECLARATIONS
@@ -215,8 +217,6 @@ private:
 	void correctOrientation();
 
 	void correctOrientationHelper(float a, float b, float aC, bool leftOfCentre);
-
-	void setRGBLED(int red, int green, int blue);
 
 	void runShortestNavigationAlgorithm();
 

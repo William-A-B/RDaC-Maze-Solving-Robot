@@ -700,6 +700,7 @@ void Robot::calculateStartingLocation()
     this->currentPosition.yCoordinate = backSensorDistance;
 
 	myMap.updateRobotPosition(currentPosition.xCoordinate, currentPosition.yCoordinate);
+	myMap.setRobotStartingLocation(currentPosition.xCoordinate, currentPosition.yCoordinate);
 
 	Serial.println("\n(X Coordinate, Y Coordinate)");
 	Serial.print("( ");
@@ -721,29 +722,59 @@ void Robot::centreOnMapGrid()
 	float coordinateGridRemainderX = fmod(this->currentPosition.xCoordinate, 5);
 	float coordinateGridRemainderY = fmod(this->currentPosition.yCoordinate, 5);
 
+	int currentDirection = -1;
+
+	// Get the current direction the robot is facing so after centering it can rotate to its original direction
+	if (bearing == 0)
+		currentDirection = 0;
+	else if (bearing == 90)
+		currentDirection = 1;
+	else if (bearing == 180)
+		currentDirection = 2;
+	else if (bearing == 270)
+		currentDirection = 3;
+
     if (coordinateGridRemainderX > 2.5f)
     {
-        if (this->bearing == 0)
-        {
-            this->rotateRobot(90);
-            this->moveRobot(-1.0f * (coordinateGridRemainderX - 2.5f));
-        }
-        else if (this->bearing == 90)
-        {
-            this->moveRobot(-1.0f * (coordinateGridRemainderX - 2.5f));
-        }
+		rotateRobotToGivenDirection(1);
+		moveRobot(-1.0f * (coordinateGridRemainderX - 2.5f));
+        // if (this->bearing == 0)
+        // {
+        //     this->rotateRobot(90);
+        //     this->moveRobot(-1.0f * (coordinateGridRemainderX - 2.5f));
+        // }
+        // else if (this->bearing == 90)
+        // {
+        //     this->moveRobot(-1.0f * (coordinateGridRemainderX - 2.5f));
+        // }
+		// else if (this->bearing == 180)
+		// {
+		// 	this->rotateRobot(90);
+        //     this->moveRobot((coordinateGridRemainderX - 2.5f));
+		// }
+		// else if (this->bearing == 270)
+		// {
+		// 	this->moveRobot((coordinateGridRemainderX - 2.5f));
+		// }
     }
     else if (coordinateGridRemainderX < 2.5f)
     {
-        if (this->bearing == 0)
-        {
-            this->rotateRobot(90);
-            this->moveRobot(coordinateGridRemainderX);
-        }
-        else if (this->bearing == 90)
-        {
-            this->moveRobot(coordinateGridRemainderX);
-        }
+		rotateRobotToGivenDirection(1);
+		moveRobot(coordinateGridRemainderX);
+        // if (this->bearing == 0)
+        // {
+        //     this->rotateRobot(90);
+        //     this->moveRobot(coordinateGridRemainderX);
+        // }
+        // else if (this->bearing == 90)
+        // {
+        //     this->moveRobot(coordinateGridRemainderX);
+        // }
+		// else if (this->bearing == 180)
+		// {
+		// 	this->rotateRobot(-90);
+        //     this->moveRobot(coordinateGridRemainderX);
+		// }
     }
 	else
 	{
@@ -752,28 +783,35 @@ void Robot::centreOnMapGrid()
 
     if (coordinateGridRemainderY > 2.5f)
     {
-        if (this->bearing == 0)
-        {
-            this->moveRobot(-1.0f * (coordinateGridRemainderY - 2.5f));
-        }
-        else if (this->bearing == 90)
-        {
-            this->rotateRobot(-90);
-            this->moveRobot(-1.0f * (coordinateGridRemainderY - 2.5f));
-        }
+		rotateRobotToGivenDirection(0);
+		moveRobot(-1.0f * (coordinateGridRemainderY - 2.5f));
+        // if (this->bearing == 0)
+        // {
+        //     this->moveRobot(-1.0f * (coordinateGridRemainderY - 2.5f));
+        // }
+        // else if (this->bearing == 90)
+        // {
+        //     this->rotateRobot(-90);
+        //     this->moveRobot(-1.0f * (coordinateGridRemainderY - 2.5f));
+        // }
     }
     else if (coordinateGridRemainderY < 2.5f)
     {
-        if (this->bearing == 0)
-        {
-            this->moveRobot(coordinateGridRemainderY);
-        }
-        else if (this->bearing == 90)
-        {
-            this->rotateRobot(-90);
-            this->moveRobot(coordinateGridRemainderY);
-        }
+		rotateRobotToGivenDirection(0);
+		moveRobot(coordinateGridRemainderY);
+        // if (this->bearing == 0)
+        // {
+        //     this->moveRobot(coordinateGridRemainderY);
+        // }
+        // else if (this->bearing == 90)
+        // {
+        //     this->rotateRobot(-90);
+        //     this->moveRobot(coordinateGridRemainderY);
+        // }
     }
+
+	// Rotate robot back to the bearing it was currently moving in
+	rotateRobotToGivenDirection(currentDirection);
 }
 
 /**
@@ -918,6 +956,11 @@ void Robot::updateCoordinateLocation()
 	//robotBLE.updateRobotLocationInfo(bearing, currentPosition.xCoordinate, currentPosition.yCoordinate);
 
 	myMap.updateRobotPosition(currentPosition.xCoordinate, currentPosition.yCoordinate);
+
+	// if (myMap.getRobotHistoryCount() % 10 == 0)
+	// {
+	// 	centreOnMapGrid();
+	// }
 
 }
 
@@ -1142,6 +1185,13 @@ void Robot::determineDirection()
 			// }
 		}
 
+		// WABWAB
+		if (leftDistance && rightDistance && forwardsDistance >= 99999.8f)
+		{
+			// Reverse as robot is stuck in a dead end
+			// Clear out the surrounding map and remeasure to make sure map is accurate
+		}
+
 		// Left smaller than Right
 		if (leftDistance <= rightDistance)
 		{
@@ -1228,9 +1278,11 @@ void Robot::retraceRouteBack()
 	// Ensure robot starts at centre of grid square
 	centreOnMapGrid();
 
-	int bearingToMove = 0;
 	int orientation = -1;
 
+	// Sometimes skipping over rotations/movements and just counting down history count without ever moving or returning to start
+	// Therefore must be returning -1 each time.
+	// Why>?>
 	while (orientation != 5)
 	{
 		orientation = myMap.retraceStepBack();
@@ -1244,7 +1296,11 @@ void Robot::retraceRouteBack()
 
 	rotateRobotToGivenDirection(0);
 
+	Serial.println("Back to starting position, stopping robot");
+
 	myMap.setTrackRobot(true);
+
+	currentState = RobotState::STATE_STOP;
 }
 
 /**

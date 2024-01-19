@@ -51,29 +51,36 @@ void loop()
 				myRobot.test();
 				break;
 			case myRobot.STATE_SETUP:
+				myRobot.setRGBLED(1, 1, 0);
 				myRobot.setup();
 				break;
 			case myRobot.STATE_LOCATE:
 				break;
 			case myRobot.STATE_SOLVE:
+				myRobot.setRGBLED(0, 0, 0);
 				myRobot.solveMaze();
 				break;
 			case myRobot.STATE_SOLVE_KNOWN_MAZE:
 				myRobot.solveKnownMaze();
 				break;
 			case myRobot.STATE_DETERMINE_DIRECTION:
+				myRobot.setRGBLED(0, 1, 1);
 				myRobot.determineDirection();
 				break;
 			case myRobot.STATE_LEFT_AND_FORWARD:
+				myRobot.setRGBLED(0, 0, 1);
 				myRobot.leftAndForwards();
 				break;
 			case myRobot.STATE_RIGHT_AND_FORWARD:
+				myRobot.setRGBLED(0, 0, 1);
 				myRobot.rightAndForwards();
 				break;
 			case myRobot.STATE_STOP:
+				myRobot.setRGBLED(1, 1, 1);
 				myRobot.stopMoving();
 				break;
 			case myRobot.STATE_FORWARD:
+				myRobot.setRGBLED(1, 0, 1);
 				myRobot.moveForwards();
 				break;
 			case myRobot.STATE_BACKWARD:
@@ -85,6 +92,7 @@ void loop()
 				myRobot.rotateRobot(90);
 				break;
 			case myRobot.STATE_RETRACE_ROUTE:
+				myRobot.setRGBLED(1, 0, 0);
 				myRobot.retraceRouteBack();
 				break;
 			case myRobot.STATE_END:

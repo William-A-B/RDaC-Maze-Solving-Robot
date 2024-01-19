@@ -11,7 +11,7 @@
 // #define MOTORSHIFT 0.4740f // Motor calibration constant to correct speed of motors for a speed on 0.75f
 
 //#define MOTORSHIFT 0.529f
-#define MOTORSHIFT 0.545f
+#define MOTORSHIFT 0.5460f // 0.545f
 
 // Correct value to give equal encoder distances for the values of
 // left = 0.046125f
