@@ -43,54 +43,26 @@ public:
 
     void drive(int time_to_drive_forwards);
     void setDirection(motorDirection current_direction);
-    void attachEncoderInterrupts();
     void setup();
     void stopDriving();
-    void turn_left(int angle);
-    void turn_right(int angle);
     
     void setSpeed(float speed);
     float getSpeed();
 
-    float calculateDistanceByWheelRotationsLeft();
-    float calculateDistanceByWheelRotationsRight();
-
-    int getWheelRotationsLeft();
-    int getWheelRotationsRight();
-
-    long int getShaftRevolutionsLeft();
-    long int getShaftRevolutionsRight();
-    long int getEncoderRevolutionsLeft();
-    long int getEncoderRevolutionsRight();
-
-    void setDistanceTravelledLeft(float distance_to_set);
-    void incrementDistanceTravelledLeft(float distance_to_increase);
-    void setDistanceTravelledRight(float distance_to_set);
-    void incrementDistanceTravelledRight(float distance_to_increase);
     float getDistanceTravelledLeft();
     float getDistanceTravelledRight();
-
-
-
-    //void countPulseLeft();
-    //void countPulseRight();
 
 private:
 
     void countPulseLeft();
     void countPulseRight();
 
-	int pinNumber;
-
     float motorSpeed;
 
-    
-    // Shaft and encoder counters for left motor
-    long int shaftRevolutionsLeft = 0;
+    // Encoder counter for left motor
     long int encoderCountLeft = 0;
 
-    // Shaft and encoder counters for right motor
-    long int shaftRevolutionsRight = 0;
+    // Encoder counter for right motor
     long int encoderCountRight = 0;
 
     // The absolute distance travelled based on the left motor encoder
@@ -113,12 +85,6 @@ private:
     // 0.1722mm per 1 encoder count avg
     // 0.01722 cm
     float distanceTravelledRight = 0;
-
-    // 329 encoder counts for one left wheel rotation
-    int wheelRotationsLeft = 0;
-    // 865 encoder counts for one right wheel rotation
-    int wheelRotationsRight = 0;
-
 
 };
 

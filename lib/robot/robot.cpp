@@ -35,17 +35,14 @@ void Robot::initialSetup()
 	// Set default forwards driving distance to 5cm
 	distanceToMoveForwards = 5.0f;
 
+	// Whether to print out extra debug information
 	verbose = false;
 
-
-    // Calibrate the motors for use
+    // Setup the motors for use
 	myMotors.setup();
 
 	// Set the default direction for the robot to move in
 	myMotors.setDirection(myMotors.DIR_FORWARDS);
-
-	// Attach the interrupts for the encoders on the motors
-	myMotors.attachEncoderInterrupts();
 
 	myMap.initialSetup(0, 0);
 

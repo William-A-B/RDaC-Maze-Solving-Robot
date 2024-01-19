@@ -19,8 +19,8 @@ Map::Map()
 	// mazeFinish.yGridSquare = 39;
 	// mazeFinish.xGridSquare = (MAP_WIDTH_X / 2);
 	// mazeFinish.yGridSquare = MAP_HEIGHT_Y - 7;
-	mazeFinish.xGridSquare = 23;
-	mazeFinish.yGridSquare = 14;
+	mazeFinish.xGridSquare = 10;
+	mazeFinish.yGridSquare = 12;
 
 	// Setup the occupancy grid array to initialise the maze prior to the robot moving
 	setupOccupancyGrid();

@@ -19,15 +19,16 @@ mbed::DigitalIn encoderRightIn(MOTOR_RIGHT_ENCODER);
 mbed::DigitalIn encoderRightInSecond(MOTOR_RIGHT_ENCODER_SECONDARY);
 
 
-
-
-void Motor::attachEncoderInterrupts()
+void Motor::setup()
 {
+    // Set the period of the PWM
+    motorPWMLeft.period_us(200);
+    motorPWMRight.period_us(200);
+
+    // Attach the interrupts for the encoders on the motors
     encoderLeft.rise(mbed::callback(this, &Motor::countPulseLeft));
     encoderRight.rise(mbed::callback(this, &Motor::countPulseRight));
 }
-
-// Motors aMotor;
 
 /**
  * @param direction
@@ -58,14 +59,6 @@ void Motor::setDirection(motorDirection currentDirection)
         motorDirectionLeft = 1;
         motorDirectionRight = 1;
     }
-}
-
-
-
-void Motor::setup()
-{
-    motorPWMLeft.period_us(200);
-    motorPWMRight.period_us(200);
 }
 
 /**
@@ -111,18 +104,10 @@ void Motor::countPulseLeft()
     if (encoderLeftIn != encoderLeftInSecond)
     {
         distanceTravelledLeft = distanceTravelledLeft + LEFT_ENCODER_DISTANCE;
-        // if (encoderCountLeft % 329)
-        // {
-        //     wheelRotationsLeft++;
-        // }
     }
     else
     {
         distanceTravelledLeft = distanceTravelledLeft - LEFT_ENCODER_DISTANCE;
-        // if (encoderCountLeft % 329)
-        // {
-        //     wheelRotationsLeft--;
-        // }
     }
     //distanceTravelledLeft = distanceTravelledLeft + 0.435;
     encoderCountLeft++;
@@ -133,88 +118,18 @@ void Motor::countPulseRight()
     if (encoderRightIn != encoderRightInSecond)
     {
         distanceTravelledRight = distanceTravelledRight - RIGHT_ENCODER_DISTANCE;
-        if (encoderCountRight % 865)
-        {
-            wheelRotationsRight++;
-        }
     }
     else
     {
         distanceTravelledRight = distanceTravelledRight + RIGHT_ENCODER_DISTANCE;
-        if (encoderCountRight % 865)
-        {
-            wheelRotationsRight--;
-        }
     }
     //distanceTravelledRight = distanceTravelledRight + 0.435;
     encoderCountRight++;
 }
 
-float Motor::calculateDistanceByWheelRotationsLeft()
-{
-    float distanceMovedLeft = WHEEL_DIAMETER * PI * wheelRotationsLeft;
-    return distanceMovedLeft;
-}
-
-float Motor::calculateDistanceByWheelRotationsRight()
-{
-    float distanceMovedRight = WHEEL_DIAMETER * PI * wheelRotationsRight;
-    return distanceMovedRight;
-}
-
-int Motor::getWheelRotationsLeft()
-{
-    return wheelRotationsLeft;
-}
-
-int Motor::getWheelRotationsRight()
-{
-    return wheelRotationsRight;
-}
-
-long int Motor::getShaftRevolutionsLeft()
-{
-    return shaftRevolutionsLeft;
-}
-
-long int Motor::getShaftRevolutionsRight()
-{
-    return shaftRevolutionsRight;
-}
-
-long int Motor::getEncoderRevolutionsLeft()
-{
-    return encoderCountLeft;
-}
-
-long int Motor::getEncoderRevolutionsRight()
-{
-    return encoderCountRight;
-}
-
-void Motor::setDistanceTravelledLeft(float distance_to_set)
-{
-    distanceTravelledLeft = distance_to_set;
-}
-
-void Motor::incrementDistanceTravelledLeft(float distanceToIncrease)
-{
-    distanceTravelledLeft = distanceTravelledLeft + distanceToIncrease;
-}
-
 float Motor::getDistanceTravelledLeft()
 {
     return distanceTravelledLeft;
-}
-
-void Motor::setDistanceTravelledRight(float distance_to_set)
-{
-    distanceTravelledRight = distance_to_set;
-}
-
-void Motor::incrementDistanceTravelledRight(float distanceToIncrease)
-{
-    distanceTravelledRight = distanceTravelledRight + distanceToIncrease;
 }
 
 float Motor::getDistanceTravelledRight()
