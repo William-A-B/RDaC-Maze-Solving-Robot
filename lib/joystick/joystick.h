@@ -1,30 +1,31 @@
 #ifndef JOYSTICK_H
 #define JOYSTICK_H
 
+#define JOYSTICK_F P0_30
+#define JOYSTICK_B P0_3
 
-void DOWN_ISR();
-void UP_ISR();
-void RIGHT_ISR();
-void LEFT_ISR();
 
-void Joystick_setup();
-
-void set_button_state(int state);
+// Define struct to hold button push flags
+struct JoystickState {
+	bool left;
+	bool right;
+	bool forwards;
+	bool backwards;
+};
 
 class Joystick
 {
 public:
 
-    //Joystick();
+    void joystickSetup();
+    int checkJoystickPress();
 
-    int check_button_press();
-    void set_button_press(int state);
+private:
+    
+    JoystickState joystick;
 
-// private:
-//     void DOWN_ISR();
-//     void UP_ISR();
-//     void RIGHT_ISR();
-//     void LEFT_ISR();
+    void joystickForwardsISR();
+    void joystickBackwardsISR();
 
 };
 

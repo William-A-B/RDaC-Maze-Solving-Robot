@@ -17,7 +17,8 @@
 // #define DEFAULT_ROBOT_SPEED 0.75f
 #define DEFAULT_ROBOT_SPEED 0.50f
 
-#define MIN_IR_DIST_FRONT 16.0f // Minimum distance for IR sensor to start detecting objects
+// WABWAB front sensor minimum changed from 16 to 14 currently
+#define MIN_IR_DIST_FRONT 14.0f // Minimum distance for IR sensor to start detecting objects
 #define MIN_IR_DIST_REAR 16.0f
 #define MIN_USONIC_DIST 16.0f // Minimum distance for USonic sensor to start detecting objects
 

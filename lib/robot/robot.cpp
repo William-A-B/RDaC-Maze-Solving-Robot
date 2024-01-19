@@ -1,7 +1,6 @@
 #include "robot.h"
 
 
-
 /**
  * @brief Function used to test various features. Any code implementation is often temporary
  * But may be promoted up to its own function at later use.

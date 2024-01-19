@@ -1,61 +1,37 @@
-/*
-	pushButton.ino - Arduino Robotics Board
-	An Arduino library for controling the Arduino Robotics Board platform,
-	either standalone or in conjunction with a Raspberry Pi
-	June 2022
-	
-	This example shows one way of reading button inputs from the onboard 5-way button
-*/
-
 #include <Arduino.h>
 #include <ARB.h>
+#include "mbed/mbed.h"
 #include "joystick.h"
 
-void DOWN_ISR();
-void UP_ISR();
-void RIGHT_ISR();
-void LEFT_ISR();
+mbed::InterruptIn joystickForwardsInterrupt(JOYSTICK_F);
+mbed::InterruptIn joystickBackwardsInterrupt(JOYSTICK_B);
 
-// Define struct to hold button push flags
-struct ButtonState{
-	bool left = false;
-	bool right = false;
-	bool up = false;
-	bool down = false;
-} buttons;
+mbed::DigitalInOut joystickForwardsPin(JOYSTICK_F);
+mbed::DigitalInOut joystickBackwardsPin(JOYSTICK_B);
 
 
+void Joystick::joystickSetup() {
 
-void Joystick_setup() {
-	
-	ARBSetup(); // Setup ARB functionallity
+  // Setup ARB functionality
+  ARBSetup(); 
 
-	// Set pins to inputs
-	pinMode(PB_LEFT, INPUT);
-	pinMode(PB_RIGHT, INPUT);
-	// pinMode(PB_UP, INPUT);
-	// pinMode(PB_DOWN, INPUT);
+  joystick.forwards = false;
+  joystick.backwards = false;
+  joystick.left = false;
+  joystick.right = false;
 
-	// Enable internal pull-ups
-	digitalWrite(PB_LEFT, HIGH);
-	digitalWrite(PB_RIGHT, HIGH);
-	// digitalWrite(PB_UP, HIGH);
-	// digitalWrite(PB_DOWN, HIGH);
+  // Enable internal pull-ups on the pins
+  joystickForwardsPin.write(HIGH);
+  joystickBackwardsPin.write(HIGH);
 
-	/* 
-	  Attach interrupts to PB pins
-	  The internal pull-ups pul the pins high when the button is open.
-	  When the button is closed it grounds the pin, so we want to be 
-	  looking for falling edges to see when the button has been pressed.
-	*/
-	attachInterrupt(digitalPinToInterrupt(PB_LEFT), LEFT_ISR, FALLING);
-	attachInterrupt(digitalPinToInterrupt(PB_RIGHT), RIGHT_ISR, FALLING);
-	// attachInterrupt(digitalPinToInterrupt(PB_UP), UP_ISR, FALLING);
-	// attachInterrupt(digitalPinToInterrupt(PB_DOWN), DOWN_ISR, FALLING);
-
-
-	// Start serial for debugging
-	Serial.begin(9600);
+  /* 
+    Attach interrupts to PB pins
+    The internal pull-ups pul the pins high when the button is open.
+    When the button is closed it grounds the pin, so we want to be 
+    looking for falling edges to see when the button has been pressed.
+  */
+  joystickForwardsInterrupt.fall(mbed::callback(this, &Joystick::joystickForwardsISR));
+  joystickBackwardsInterrupt.fall(mbed::callback(this, &Joystick::joystickBackwardsISR));
 }
 
 /*
@@ -63,101 +39,41 @@ void Joystick_setup() {
   and if it has it prints out the name of that button and clears
   the flag
   Return directions corresponding to direction moved on Joystick
-  3 - Forwards
-  2 - Backwards
-  1 - Left
-  0 - Right
+  0 - Forwards
+  1 - Backwards
+  2 - Left
+  3 - Right
 */
-int Joystick::check_button_press() {
-  if(buttons.left == true){
-    //Serial.println("left");
-    //buttons.left = false;
-	  return 3;
-  }
+int Joystick::checkJoystickPress() {
+  if (joystick.forwards == true)
+    return 0;
+  else if (joystick.backwards == true)
+    return 1;
+  else if (joystick.left == true)
+    return 2;
+  else if (joystick.right == true)
+    return 3;
   
-  if(buttons.right == true){
-    //Serial.println("right");
-    //buttons.right = false;
-	  return 2;
-  }
-  
-  if(buttons.up == true){
-    //Serial.println("up");
-    //buttons.up = false;
-	  return 0;
-  }
-  
-  if(buttons.down == true){
-    //Serial.println("down");
-    //buttons.down = false;
-	  return 1;
-  }
-  return 0;
-
+  return -1;
 }
+
 /*
   It's best practice to keep ISRs as short as possible so these ISRs
   just set a flag if a button has been pressed so it can be acted upon
   outside of the ISR
 */
-void LEFT_ISR(){
-  buttons.left = true;
-  buttons.down = false;
-  buttons.right = false;
-  buttons.up = false;
-}
-
-void RIGHT_ISR(){
-  buttons.right = true;
-  buttons.left = false;
-  buttons.down = false;
-  buttons.up = false;
-}
-
-void UP_ISR(){
-  buttons.up = true;
-  buttons.left = false;
-  buttons.down = false;
-  buttons.right = false;
-}
-
-void DOWN_ISR(){
-  buttons.down = true;
-  buttons.right = false;
-  buttons.up = false;
-  buttons.left = false;
-}
-
-/**
- * 0 - Stop robot
- * 1 - Run robot
-*/
-void set_button_state(int state)
+void Joystick::joystickForwardsISR()
 {
-  if (state == 0)
-  {
-    buttons.right = true;
-    buttons.left = false;
-    buttons.down = false;
-    buttons.up = false;
-  }
-  else if (state == 1)
-  {
-    buttons.left = true;
-    buttons.right = false;
-    buttons.down = false;
-    buttons.up = false;
-  }
+  joystick.forwards = true;
+  joystick.backwards = false;
+  joystick.left = false;
+  joystick.right = false;
 }
 
-
-void Joystick::set_button_press(int state)
+void Joystick::joystickBackwardsISR()
 {
-  if (state == 1)
-  {
-    buttons.left = true;
-    buttons.right = false;
-    buttons.down = false;
-    buttons.up = false;
-  }
+  joystick.forwards = false;
+  joystick.backwards = true;
+  joystick.left = false;
+  joystick.right = false;
 }

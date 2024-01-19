@@ -1,6 +1,6 @@
 /**
  * @file main.cpp
- * @author William Betteridge
+ * @author Y3905304
  * @brief The main file and entry point into the program
  */
 #include <Arduino.h>
@@ -12,9 +12,7 @@
 #include "robot.h"
 
 Robot myRobot;
-Joystick my_joystick;
-
-bool continue_running = true;
+Joystick myJoystick;
 
 void waitForSerial();
 
@@ -27,7 +25,7 @@ void setup()
 	Serial.begin(BAUDRATE);
 
 	// Call the setup function to initialise the joystick so it can be used to control the robot
-	Joystick_setup();
+	myJoystick.joystickSetup();
 
 	// Setup for robot that is run once at the very start
 	myRobot.initialSetup();
@@ -42,7 +40,7 @@ void setup()
  */
 void loop()
 {
-	if (my_joystick.check_button_press() == 3)
+	if (myJoystick.checkJoystickPress() == 0)
 	{
 		// waitForSerial();
 		switch (myRobot.currentState)
@@ -96,42 +94,17 @@ void loop()
 				myRobot.retraceRouteBack();
 				break;
 			case myRobot.STATE_END:
-				set_button_state(0);
+				//set_button_state(0);
 				break;
 		}
 	}
-	else if (my_joystick.check_button_press() == 2)
+	else if (myJoystick.checkJoystickPress() == 1)
 	{
 		myRobot.stopMoving();
 		//myRobot.myMap.displayRobotHistory();
 		myRobot.myMap.displayMap();
-		my_joystick.set_button_press(1);
 		myRobot.currentState = myRobot.RobotState::STATE_STOP;
 	}
-
-
-
-	// // If the robot is set to continue running keep on checking the joystick button presses
-	// // Else stopMoving the robot from moving
-	// if (continue_running == true)
-	// {
-	// 	// Forwards direction pressed on Joystick --> Run
-	// 	if (my_joystick.check_button_press() == 3)
-	// 	{
-	// 		continue_running = myRobot.start();
-	// 		//continue_running = myRobot.run();
-	// 	}
-	// 	// Backwards direction pressed on Joystick --> Stop
-	// 	else if (my_joystick.check_button_press() == 2)
-	// 	{
-	// 		myRobot.stopMoving();
-	// 	}
-	// }
-	// else
-	// {
-	// 	set_button_state(0);
-	// 	myRobot.stopMoving();
-	// }
 }
 
 void waitForSerial(){
