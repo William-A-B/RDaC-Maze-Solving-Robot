@@ -7,21 +7,7 @@
  */
 void Robot::test()
 {
-	float frontSensorDistance = mySensors.read_averaged_IR_sensor_front(DEFAULT_AVG_SENSOR_READINGS);
-	float backSensorDistance = mySensors.read_averaged_IR_sensor_back(DEFAULT_AVG_SENSOR_READINGS);
-	float leftSensorDistance = mySensors.read_averaged_usonic_sensor_left(DEFAULT_AVG_SENSOR_READINGS);
-	float rightSensorDistance = mySensors.read_averaged_usonic_sensor_right(DEFAULT_AVG_SENSOR_READINGS);
-
-	Serial.println("Sensor distances to add to map");
-	Serial.print("F: ");
-	Serial.print(frontSensorDistance);
-	Serial.print(", B: ");
-	Serial.print(backSensorDistance);
-	Serial.print(", L: ");
-	Serial.print(leftSensorDistance);
-	Serial.print(", R: ");
-	Serial.println(rightSensorDistance);
-
+	moveRobot(30.0f);
 	wait_us(200000);
 
 }
@@ -116,214 +102,15 @@ void Robot::setup()
 void Robot::solveMaze()
 {
 	algorithm = NAVIGATE_MAP;
-	// algorithm = KNOWN_MAZE;
 	// algorithm = FOLLOW_WALL;
 
-	if (algorithm == DIRECT_AND_AROUND)
+	if (algorithm == NAVIGATE_MAP)
 	{
-		runDirectAlgorithm();
-	}
-	else if (algorithm == NAVIGATE_MAP)
-	{
-		// runShortestNavigationAlgorithm();
 		currentState = RobotState::STATE_DETERMINE_DIRECTION;
-	}
-	else if (algorithm == KNOWN_MAZE)
-	{
-		currentState = RobotState::STATE_SOLVE_KNOWN_MAZE;
 	}
 	else if (algorithm == FOLLOW_WALL)
 	{
 		runWallFollowingAlgorithm();
-	}
-}
-
-void Robot::solveKnownMaze()
-{
-	// Distances too big and causing the "not enough free space ahead", so it needs to be removed for this algorithm
-	Serial.println("Start");
-	Serial.println("Right");
-	rotateRobot(90, true);
-	Serial.println("Forwards");
-	moveRobot(45.0f);
-	Serial.println("Left");
-	rotateRobot(-90, true);
-	Serial.println("Forwards");
-	moveRobot(45.0f);
-	Serial.println("Left");
-	rotateRobot(-90, true);
-	Serial.println("Forwards");
-	moveRobot(48.0f);
-	Serial.println("Right");
-	rotateRobot(90, true);
-	Serial.println("Forwards");
-	moveRobot(59.0f);
-	Serial.println("Right");
-	rotateRobot(90, true);
-	Serial.println("Forwards");
-	moveRobot(58.0f);
-	Serial.println("Left");
-	rotateRobot(-90, true);
-	Serial.println("Forwards");
-	moveRobot(55.0f);
-	Serial.println("End");
-}
-
-void Robot::runShortestNavigationAlgorithm()
-{
-	
-	if (verbose)
-		Serial.println("\nrunShortestNavigationAlgorithm\n");
-
-	bool canMoveForwards = false;
-	//bool reverse = false;
-
-	
-
-	// Check if the robot has free space in front of it to move forwards by 5cm
-	canMoveForwards = this->checkRouteAhead(distanceToMoveForwards);
-
-	if (canMoveForwards)
-	{
-
-		setRGBLED(1, 0, 1);
-		moveHelper();
-	}
-	else
-	{
-		myMap.displayRobotHistory();
-		myMap.displayMap();
-
-		if (this->checkSideSpaceLeft(DEFAULT_AVG_SENSOR_READINGS))
-		{
-			setRGBLED(1, 1, 0);
-			this->rotateRobot(-90);
-		}
-		else if (this->checkSideSpaceRight(DEFAULT_AVG_SENSOR_READINGS))
-		{
-			setRGBLED(1, 1, 0);
-			this->rotateRobot(90);
-		}
-		// else
-		// {
-		// 	reverse = true;
-		// 	while (reverse)
-		// 	{
-		// 		setRGBLED(0, 1, 1);
-		// 		this->driveBackwards();
-		// 		wait_us(10000);
-
-		// 		if (this->checkSideSpaceLeft(1))
-		// 		{
-		// 			reverse = false;
-		// 			this->rotateRobot(-90);
-		// 		}
-		// 		else if (this->checkSideSpaceRight(1))
-		// 		{
-		// 			reverse = false;
-		// 			this->rotateRobot(90);
-		// 		}
-		// 	}
-		// }
-	}
-}
-
-
-/**
- * @brief Runs the algorithm for the robot to solve the maze via moving
- * directly forwards until it reaches an obstacle then it turns into the
- * next free direction and repeats
- */
-void Robot::runDirectAlgorithm()
-{
-	if (verbose)
-		Serial.println("\nrunDirectAlgorithm\n");
-
-	bool canMoveForwards = false;
-	//bool reverse = false;
-
-	canMoveForwards = this->checkRouteAhead(distanceToMoveForwards);
-
-	if (canMoveForwards)
-	{
-		setRGBLED(1, 0, 1);
-		moveHelper();
-		// if (driveForwardsStarted == false)
-		// {
-		// 	if (robotBLE.connectToClient() == true)
-		// 	{
-		// 		Serial.println("Connected to Client, starting going forwards");
-		// 	}
-		// 	this->driveForwards();
-
-		// 	initialDistanceMovedLeft = myMotors.getDistanceTravelledLeft();
-		// 	initialDistanceMovedRight = myMotors.getDistanceTravelledRight();
-		// 	driveForwardsStarted = true;
-		// }
-		
-		if (robotBLE.isClientConnected() == true)
-		{
-			robotBLE.pingService(0x01);
-			Serial.println("Connected - Robot going forwards");
-		}
-	}
-	else
-	{
-		myMap.displayRobotHistory();
-		myMap.displayMap();
-
-		// this->stopMoving();
-		// driveForwardsStarted = false;
-
-		// robotBLE.enableSendingData();
-		// updateCoordinateLocation();
-		// robotBLE.disableSendingData();
-
-		if (robotBLE.disconnectFromClient() == true)
-		{
-			Serial.println("Disconnected from Client, stopping moving and now turning");
-		}
-
-		if (this->checkSideSpaceLeft(DEFAULT_AVG_SENSOR_READINGS))
-		{
-			setRGBLED(1, 1, 0);
-			this->rotateRobot(-90);
-		}
-		else if (this->checkSideSpaceRight(DEFAULT_AVG_SENSOR_READINGS))
-		{
-			setRGBLED(1, 1, 0);
-			this->rotateRobot(90);
-		}
-		// else
-		// {
-		// 	reverse = true;
-		// 	while (reverse)
-		// 	{
-		// 		setRGBLED(0, 1, 1);
-		// 		this->driveBackwards();
-		// 		wait_us(10000);
-		// 		// if (mySensors.get_back_IR_distance() < MIN_IR_DIST_REAR)
-		// 		// {
-		// 		// 	reverse = false;
-		// 		// 	this->stopMoving();
-		// 		// 	digitalWrite(LEDR, LOW);
-		// 		// 	digitalWrite(LEDG, LOW);
-		// 		// 	digitalWrite(LEDB, LOW);
-		// 		// }
-
-		// 		if (this->checkSideSpaceLeft(1))
-		// 		{
-		// 			reverse = false;
-		// 			this->rotateRobot(-90);
-		// 		}
-		// 		else if (this->checkSideSpaceRight(1))
-		// 		{
-		// 			reverse = false;
-		// 			this->rotateRobot(90);
-		// 		}
-				
-		// 	}
-		// }
 	}
 }
 
@@ -394,6 +181,10 @@ void Robot::runWallFollowingAlgorithm()
 	}
 }
 
+/**
+ * @brief Adjusts the orientation to be perpendicular to the wall
+ * Called when the robot is in the FOLLOW_WALL algorithm
+ */
 void Robot::correctOrientationWall()
 {
 	float leftSensorDistance = mySensors.read_averaged_usonic_sensor_left(DEFAULT_AVG_SENSOR_READINGS);
@@ -413,19 +204,40 @@ void Robot::driveForwards()
 	myMotors.drive(0);
 }
 
+/**
+ * @brief Sets the robot to turn left and then move forwards by setting the robot state to STATE_FORWARD
+ * Called from the STATE_LEFT_AND_FORWARD state
+ */
 void Robot::leftAndForwards()
 {
 	rotateRobot(-90);
 	currentState = RobotState::STATE_FORWARD;
 }
 
+/**
+ * @brief Sets the robot to turn right and then move forwards by setting the robot state to STATE_FORWARD
+ * Called from the STATE_RIGHT_AND_FORWARD state
+ */
 void Robot::rightAndForwards()
 {
 	rotateRobot(90);
 	currentState = RobotState::STATE_FORWARD;
 }
 
-void Robot::moveHelper()
+/**
+ * @brief Helper function for the moveRobot() function
+ * Series of function calls that must be run each time the robot moves forward one grid square
+ * Moves the robot forwards the distanceToMoveForwards value
+ * Updates the new coordinate location in the map
+ * And adds any obstacles into the map
+ * 
+ * @return true 	- If the robot has moved forwards successfully
+ * @return false 	- If the robot has not moved forwards successfully
+ * 
+ * @return used to know whether the robot has moved forwards successfully or not
+ * So that when the robot is retracing its steps it doesn't get stuck infront of a wall
+ */
+bool Robot::moveHelper()
 {
 	if (verbose)
 		Serial.println("\nmoveHelper\n");
@@ -433,7 +245,7 @@ void Robot::moveHelper()
 	initialDistanceMovedLeft = myMotors.getDistanceTravelledLeft();
 	initialDistanceMovedRight = myMotors.getDistanceTravelledRight();
 
-	moveRobot(distanceToMoveForwards);
+	bool successfullyMoved = moveRobot(distanceToMoveForwards);
 
 
 	//correctOrientation();
@@ -450,9 +262,13 @@ void Robot::moveHelper()
 		myMap.displayMap();
 		// myMap.displayRobotHistory();
 	}
+	return successfullyMoved;
 }
 
-
+/**
+ * @brief Wrapper for the moveHelper() function, called when the robot is in the state STATE_FORWARD
+ * At the end, returns the robot back to the STATE_DETERMINE_DIRECTION state
+ */
 void Robot::moveForwards()
 {
 	moveHelper();
@@ -464,7 +280,7 @@ void Robot::moveForwards()
  * 
  * @param distanceToMove 	The number of mm to move the robot
  */
-void Robot::moveRobot(float distanceToMove)
+bool Robot::moveRobot(float distanceToMove)
 {
 	if (verbose)
 		Serial.println("\nmoveRobot\n");
@@ -493,7 +309,7 @@ void Robot::moveRobot(float distanceToMove)
 	{
 		//throw ErrorFlag("Could not move forwards as space was not free", true);
 		Serial.println("Not enough free space ahead");
-		return;
+		return false;
 	}
 
     // Call direction change function on motors depending on the angle direction
@@ -511,7 +327,7 @@ void Robot::moveRobot(float distanceToMove)
 	}
 	else
 	{
-		return;
+		return false;
 	}
 
     // Calculate current distance the robot has moved before the robot starts moving the set amount
@@ -547,32 +363,16 @@ void Robot::moveRobot(float distanceToMove)
 		loopCount++;
 		
 
-	} while (!reachedDistance);
+	} while (reachedDistance == false);
 
 	if (verbose)
 		Serial.println(loopCount);
 
-	// // Loop until robot has moved the distance specified
-	// // Loops until the sum of the distances moved by both motors is equal to or greater than
-	// // the set distance to move multiplied by two since the sum of the two wheels is taken.
-    // while (fabs(differenceBetweenMotorDistances) < (distanceToMove * 2.0f))
-	// {
-	// 	// Get left wheel distance moved whilst turning robot
-	// 	distanceMovedLeft = myMotors.getDistanceTravelledLeft() - initialDistanceMovedLeft;
-
-	// 	// Get right wheel distance moved whilst turning robot
-	// 	distanceMovedRight = myMotors.getDistanceTravelledRight() - initialDistanceMovedRight;
-
-	// 	// Get sum/difference between both motors
-	// 	differenceBetweenMotorDistances = distanceMovedLeft + distanceMovedRight;
-
-	// 	// Delay to ensure polling of interrupt is not backlogged
-	// 	wait_us(100);
-	// }
-
     // Stop robot moving and reset direction to forwards (incase it was going backwards)
 	myMotors.stopDriving();
     myMotors.setDirection(myMotors.DIR_FORWARDS);
+
+	return true;
 }
 
 /**
@@ -590,6 +390,7 @@ void Robot::rotateRobot(int degrees)
  * @brief Rotates the robot about a point a set number of degrees
  *
  * @param degrees 	The number of degrees to rotate, positive = clockwise direction, negative = anticlockwise
+ * @param ignoreBearingUpdate 	Whether to update the robots bearing or not
  */
 void Robot::rotateRobot(int degrees, bool ignoreBearingUpdate)
 {
@@ -665,13 +466,40 @@ void Robot::rotateRobot(int degrees, bool ignoreBearingUpdate)
 	myMotors.setDirection(myMotors.DIR_FORWARDS);
 }
 
+/**
+ * @brief Rotates the robot to the direction given
+ * The direction can be any cardinal direction
+ * 
+ * @param direction - The direction to turn towards
+ * 0 - North
+ * 1 - East
+ * 2 - South
+ * 3 - West
+ */
 void Robot::rotateRobotToGivenDirection(int direction)
 {
 	direction = direction * 90;
 
 	int rotationAngle = direction - bearing;
 
+	// If bigger than 180, 360 - angle * -1
+	if (rotationAngle > 180)
+	{
+		rotationAngle = (360 - rotationAngle)*-1;
+	}
+
+
 	rotateRobot(rotationAngle, false);
+}
+
+/**
+ * @brief Reverses the robots direction so it rotates 180
+ * and faces the other way
+ */
+void Robot::reverseDirection()
+{
+	rotateRobot(180);
+	currentState = RobotState::STATE_DETERMINE_DIRECTION;
 }
 
 /**
@@ -694,6 +522,8 @@ void Robot::calculateStartingLocation()
     // Set coordinate position based on sensor readings
     this->currentPosition.xCoordinate = leftSensorDistance;
     this->currentPosition.yCoordinate = backSensorDistance;
+    // this->currentPosition.xCoordinate = 75.0f;
+    // this->currentPosition.yCoordinate = 120.0f;
 
 	myMap.updateRobotPosition(currentPosition.xCoordinate, currentPosition.yCoordinate);
 	myMap.setRobotStartingLocation(currentPosition.xCoordinate, currentPosition.yCoordinate);
@@ -910,7 +740,11 @@ bool Robot::checkSideSpaceRight(int num_readings)
 	return false;
 }
 
-
+/**
+ * @brief updates the robots absolute coordinate locations within the maze,
+ * based on the distance moved by each wheel
+ * Uses the initialDistanceMovedLeft/Right member variables to calculate the distance moved
+ */
 void Robot::updateCoordinateLocation()
 {
 	Serial.println("\nupdateCoordinateLocation");
@@ -960,6 +794,10 @@ void Robot::updateCoordinateLocation()
 
 }
 
+/**
+ * @brief Gets sensor distances from all four sensors
+ * If obstacles are within the maximum measuring distance, add them into the map
+ */
 void Robot::processSensorInfo()
 {
 	if (verbose)
@@ -997,6 +835,12 @@ void Robot::processSensorInfo()
 	myMap.addObstaclesToMap(frontSensorDistance, backSensorDistance, leftSensorDistance, rightSensorDistance, bearing);
 }
 
+/**
+ * @brief Each step the robot moves forwards, if it is not facing perpendicular to the wall
+ * it will correct its orientation to be perpendicular to the wall.
+ * Rotates left and right to determine the distance to the wall in front of the robot
+ * Then rotates back to the original position and turns to face the wall based on the angle it calculates
+ */
 void Robot::correctOrientation()
 {	
 	if (verbose)
@@ -1062,6 +906,17 @@ void Robot::correctOrientation()
 
 }
 
+/**
+ * @brief Helper funciton for correctOrientation().
+ * Uses the distances calculated by the front sensor to determine the angle the robot needs
+ * to turn in order to face perpendicular towards the wall.
+ * 
+ * @param a 			- Original sensor distance in the direction the robot is currently facing
+ * @param b 			- Shortest sensor distance between the left and right rotation checks
+ * @param aC 			- The angle the robot turns to check the other two distances
+ * @param leftOfCentre 	- Whether the robot is left of the centre of its original direction or not
+ * 						  Used to determine whether the robot needs to turn left or right to face the wall when correcting itself
+ */
 void Robot::correctOrientationHelper(float a, float b, float aC, bool leftOfCentre)
 {
 	//if (verbose)
@@ -1111,6 +966,14 @@ void Robot::correctOrientationHelper(float a, float b, float aC, bool leftOfCent
 	
 }
 
+/**
+ * @brief Sets the RGB LED onboard the Arduino Nano to a given colour
+ * LED is active low, so 0 = on, 1 = off
+ * 
+ * @param red 	- controls the red LED
+ * @param green - controls the green LED
+ * @param blue 	- controls the blue LED
+ */
 void Robot::setRGBLED(int red, int green, int blue)
 {
 	digitalWrite(LEDR, red);
@@ -1118,6 +981,11 @@ void Robot::setRGBLED(int red, int green, int blue)
 	digitalWrite(LEDB, blue);
 }
 
+/**
+ * @brief Determines the direction to move at each step forwards in the map grid.
+ * Determines the next robot state based on the obstacles sensors detect
+ * as well as any objects within the maze that affect the next movement
+ */
 void Robot::determineDirection()
 {
 	Serial.println("\nDetermining Direction: Next Step Forwards\n");
@@ -1138,6 +1006,7 @@ void Robot::determineDirection()
 		currentState = RobotState::STATE_STOP;
 	}
 
+	// If robot is at the end of the maze, start retracing steps back
 	if (myMap.checkIfReachedFinish() == true)
 	{
 		Serial.println("Reached End of Maze! Starting to Retrace Steps Back");
@@ -1145,98 +1014,95 @@ void Robot::determineDirection()
 	}
 	else
 	{
+		// If space ahead is free both from sensor and in map, get front sensor distance
 		if (checkRouteAhead(distanceToMoveForwards) == true)
 		{
-			if (myMap.checkNextGridSpace(sensorAdjustment) == true)
-			{
-				forwardsDistance = myMap.determineDistanceToFinish(sensorAdjustment);
-			}
-			else if (myMap.checkNextGridSpace(sensorAdjustment) == 2)
+			if (myMap.checkNextGridSpace(sensorAdjustment) == 1 || myMap.checkNextGridSpace(sensorAdjustment) == 2)
 			{
 				forwardsDistance = myMap.determineDistanceToFinish(sensorAdjustment);
 			}
 		}
-
+		
+		// If space to left is free both from sensor and in map, get left sensor distance
 		if (checkSideSpaceLeft(5) == true)
 		{
-			if (myMap.checkNextGridSpace(sensorAdjustment+3) == true)
+			if (myMap.checkNextGridSpace(sensorAdjustment+3) == 1)
 			{
 				leftDistance = myMap.determineDistanceToFinish(sensorAdjustment+3);
 			}
-			// else if (myMap.checkNextGridSpace(sensorAdjustment+3) == 2)
-			// {
-			// 	leftDistance = myMap.determineDistanceToFinish(sensorAdjustment+3);
-			// }
 		}
 
+		// If space to right is free both from sensor and in map, get right sensor distance
 		if (checkSideSpaceRight(5) == true)
 		{
-			if (myMap.checkNextGridSpace(sensorAdjustment+1) == true)
+			if (myMap.checkNextGridSpace(sensorAdjustment+1) == 1)
 			{
 				rightDistance = myMap.determineDistanceToFinish(sensorAdjustment+1);
 			}
-			// else if (myMap.checkNextGridSpace(sensorAdjustment+1) == 2)
-			// {
-			// 	rightDistance = myMap.determineDistanceToFinish(sensorAdjustment+1);
-			// }
 		}
 
-		// WABWAB
-		if (leftDistance && rightDistance && forwardsDistance >= 99999.8f)
+		// If robot is blocked on all three sides, rotate 180 to reverse direction
+		// Will occur if robot is stuck in a dead end.
+		if (leftDistance >= 99999.8f && rightDistance >= 99999.8f && forwardsDistance >= 99999.8f)
 		{
-			// Reverse as robot is stuck in a dead end
-			// Clear out the surrounding map and remeasure to make sure map is accurate
+			currentState = RobotState::STATE_REVERSE_DIRECTION;
 		}
-
-		// Left smaller than Right
-		if (leftDistance <= rightDistance)
-		{
-			if (forwardsDistance <= leftDistance)
-			{
-				currentState = RobotState::STATE_FORWARD;
-				Serial.println("FORWARD 1");
-				Serial.print(leftDistance);
-				Serial.print(", ");
-				Serial.print(forwardsDistance);
-				Serial.print(", ");
-				Serial.println(rightDistance);
-			}
-			else
-			{
-				currentState = RobotState::STATE_LEFT_AND_FORWARD;
-				Serial.println("LEFT AND FORWARD");
-				Serial.print(leftDistance);
-				Serial.print(", ");
-				Serial.print(forwardsDistance);
-				Serial.print(", ");
-				Serial.println(rightDistance);
-			}
-		}
-		// Right smaller than left
 		else
 		{
-			if (forwardsDistance <= rightDistance)
+			// Left smaller than Right
+			if (leftDistance <= rightDistance)
 			{
-				currentState = RobotState::STATE_FORWARD;
-				Serial.println("FORWARD 2");
-				Serial.print(leftDistance);
-				Serial.print(", ");
-				Serial.print(forwardsDistance);
-				Serial.print(", ");
-				Serial.println(rightDistance);
+				// Forwards smaller than left, go forwards
+				if (forwardsDistance <= leftDistance)
+				{
+					currentState = RobotState::STATE_FORWARD;
+					Serial.println("FORWARD 1");
+					Serial.print(leftDistance);
+					Serial.print(", ");
+					Serial.print(forwardsDistance);
+					Serial.print(", ");
+					Serial.println(rightDistance);
+				}
+				// Left smaller than forwards, turn left and then forwards
+				else
+				{
+					currentState = RobotState::STATE_LEFT_AND_FORWARD;
+					Serial.println("LEFT AND FORWARD");
+					Serial.print(leftDistance);
+					Serial.print(", ");
+					Serial.print(forwardsDistance);
+					Serial.print(", ");
+					Serial.println(rightDistance);
+				}
 			}
+			// Right smaller than left
 			else
 			{
-				currentState = RobotState::STATE_RIGHT_AND_FORWARD;
-				Serial.println("RIGHT AND FORWARD");
-				Serial.print(leftDistance);
-				Serial.print(", ");
-				Serial.print(forwardsDistance);
-				Serial.print(", ");
-				Serial.println(rightDistance);
+				// Forwards smaller than right, go forwards
+				if (forwardsDistance <= rightDistance)
+				{
+					currentState = RobotState::STATE_FORWARD;
+					Serial.println("FORWARD 2");
+					Serial.print(leftDistance);
+					Serial.print(", ");
+					Serial.print(forwardsDistance);
+					Serial.print(", ");
+					Serial.println(rightDistance);
+				}
+				// Right smaller than forwards, turn right and then forwards
+				else
+				{
+					currentState = RobotState::STATE_RIGHT_AND_FORWARD;
+					Serial.println("RIGHT AND FORWARD");
+					Serial.print(leftDistance);
+					Serial.print(", ");
+					Serial.print(forwardsDistance);
+					Serial.print(", ");
+					Serial.println(rightDistance);
+				}
 			}
 		}
-	}	
+	}
 }
 
 /**
@@ -1267,40 +1133,67 @@ int Robot::adjustedMapDirection()
 	return -1;
 }
 
+/**
+ * @brief Called once the robot has reached the end of the maze
+ * Robot retraces its steps back along the coordinates it took when 
+ * solving the maze.
+ * Does not require any navigation sensing so is much faster to return to the start
+ */
 void Robot::retraceRouteBack()
 {
+	// Stop tracking robot positions, so history isn't overwritten
 	myMap.setTrackRobot(false);
 
 	// Ensure robot starts at centre of grid square
 	centreOnMapGrid();
 
 	int orientation = -1;
+	bool successfullyMoved = false;
 
 	// Sometimes skipping over rotations/movements and just counting down history count without ever moving or returning to start
 	// Therefore must be returning -1 each time.
 	// Why>?>
 	while (orientation != 5)
 	{
+		successfullyMoved = false;
 		orientation = myMap.retraceStepBack();
 		
 		if (orientation == -1)
+		{
+			Serial.println("Robot in same location as next position to move to");
 			continue;
+		}
 		
+		// Rotate robot to the direction needed to retrace the step
 		rotateRobotToGivenDirection(orientation);
-		moveHelper();
+		
+		// Move robot forwards 5cm, if not enough space in front, move backwards 2cm and try again
+		while (successfullyMoved == false)
+		{
+			successfullyMoved = moveHelper();
+			if (successfullyMoved == false)
+			{
+				// move backwards 2 cm to make sure enough space to apply normal 5cm move forwards.
+				moveRobot(-2.0f);
+			}
+		}
+
+		myMap.displayRobotHistory();
 	}
 
 	rotateRobotToGivenDirection(0);
 
 	Serial.println("Back to starting position, stopping robot");
 
+	// Set the tracking for robot positions to true again
 	myMap.setTrackRobot(true);
 
+	// Back at start of maze, stop robot
 	currentState = RobotState::STATE_STOP;
 }
 
 /**
- * @brief Stops the robot from moving
+ * @brief Stops the robot moving completely, so that it is stationary
  */
 void Robot::stopMoving()
 {

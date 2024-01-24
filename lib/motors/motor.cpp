@@ -1,5 +1,9 @@
 #include "motor.h"
 
+
+// INPUTS AND OUTPUTS DEFINITIONS
+
+
 mbed::DigitalOut motorDirectionLeft(MOTOR_LEFT_DIRECTION);
 mbed::DigitalOut motorDirectionRight(MOTOR_RIGHT_DIRECTION);
 
@@ -19,6 +23,10 @@ mbed::DigitalIn encoderRightIn(MOTOR_RIGHT_ENCODER);
 mbed::DigitalIn encoderRightInSecond(MOTOR_RIGHT_ENCODER_SECONDARY);
 
 
+/**
+ * @brief Sets up the motors defining the PWM frequency
+ * Attaches the interrupts too
+ */
 void Motor::setup()
 {
     // Set the period of the PWM
@@ -31,7 +39,9 @@ void Motor::setup()
 }
 
 /**
- * @param direction
+ * @brief Set the direction of the motors
+ * 
+ * @param current_direction the direction to set the current direction to
  * 0 - forwards
  * 1 - backwards
  * 2 - clockwise circle
@@ -62,8 +72,10 @@ void Motor::setDirection(motorDirection currentDirection)
 }
 
 /**
- * @param timeToDriveForwards - How long to drive forwards for in ms
- * Sets the motors to drive in the direction set and at the speed set by the setSpeed function
+ * @brief Sets the motors to drive forwards at the current set speed
+ * 
+ * @param time_to_drive_forwards  - if the robot should drive forwards for a set time
+ * If equal to 0, drives forwards until told to stop
  */
 void Motor::drive(int timeToDriveForwards)
 {
@@ -81,12 +93,21 @@ void Motor::drive(int timeToDriveForwards)
     }
 }
 
+/**
+ * @brief Stops the motors from moving completely
+ * 
+ */
 void Motor::stopDriving()
 {
     motorPWMLeft.write(0.0f);
     motorPWMRight.write(0.0f);
 }
 
+/**
+* @brief Sets the speed of the motors
+* 
+* @param speed the speed to set the motors to
+*/
 void Motor::setSpeed(float speedToSet)
 {
     motorSpeed = speedToSet;
@@ -94,11 +115,19 @@ void Motor::setSpeed(float speedToSet)
     motorPWMRight.write(speedToSet);
 }
 
+/**
+ * @brief Gets the speed of the motors
+ * 
+ * @return float the speed of the motors
+ */
 float Motor::getSpeed()
 {
     return motorSpeed;
 }
 
+/**
+ * @brief Interrupt service routine to count the pulses for the left encoder
+ */
 void Motor::countPulseLeft()
 {
     if (encoderLeftIn != encoderLeftInSecond)
@@ -113,6 +142,9 @@ void Motor::countPulseLeft()
     encoderCountLeft++;
 }
 
+/**
+ * @brief Interrupt service routine to count the pulses for the right encoder
+ */
 void Motor::countPulseRight()
 {
     if (encoderRightIn != encoderRightInSecond)
@@ -127,11 +159,21 @@ void Motor::countPulseRight()
     encoderCountRight++;
 }
 
+/**
+ * @brief Gets the distance travelled by the left wheel
+ * 
+ * @return float the distance travelled by the left wheel
+ */
 float Motor::getDistanceTravelledLeft()
 {
     return distanceTravelledLeft;
 }
 
+/**
+ * @brief Get the distance travelled by the right wheel
+ * 
+ * @return float the distance travelled by the right wheel
+ */
 float Motor::getDistanceTravelledRight()
 {
     return distanceTravelledRight;

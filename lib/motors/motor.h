@@ -1,28 +1,26 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
+/**
+ * @file motor.h
+ * @author Y3905304
+ * @brief Motor class header file, contains all the functions and variables for the motor class
+ * 
+ */
+
 #include <Arduino.h>
 #include <mbed/mbed.h>
 #include "pindef.h"
 
-//#define MOTORSHIFT 0.515f // Motor calibration constant to correct speed of motors for a speed of 0.5f
-
-// 0.48f - Move in straight line value
-// #define MOTORSHIFT 0.4740f // Motor calibration constant to correct speed of motors for a speed on 0.75f
-
-//#define MOTORSHIFT 0.529f
-#define MOTORSHIFT 0.5460f // 0.545f
+// Motor calibration constant to correct speed of motors for a speed of 0.5f
+#define MOTORSHIFT 0.550f
 
 // Correct value to give equal encoder distances for the values of
 // left = 0.046125f
 // right = 0.01722f
-//#define MOTORSHIFT 0.4400030f 
 
 #define LEFT_ENCODER_DISTANCE 0.046125f
-// #define LEFT_ENCODER_DISTANCE 0.047500f
 #define RIGHT_ENCODER_DISTANCE 0.01694f
-
-
 
 // Radius of the wheels - 48.5mm or 4.85cm
 #define WHEEL_DIAMETER 48.5
@@ -31,8 +29,15 @@ class Motor
 {
 public:
 
+    /** 
+     * Constructor for the motor class, empty
+    */
     Motor( ){};
 
+    /**
+     * @brief Enum to define the directions the motors and wheels should move in
+     * 
+     */
     enum motorDirection
 	{
 		DIR_FORWARDS,
@@ -41,20 +46,75 @@ public:
 		DIR_ANTICLOCKWISE,
 	} current_direction;
 
+    /**
+     * @brief Sets the motors to drive forwards at the current set speed
+     * 
+     * @param time_to_drive_forwards  - if the robot should drive forwards for a set time
+     * If equal to 0, drives forwards until told to stop
+     */
     void drive(int time_to_drive_forwards);
+
+    /**
+     * @brief Set the direction of the motors
+     * 
+     * @param current_direction the direction to set the current direction to
+     * 0 - forwards
+     * 1 - backwards
+     * 2 - clockwise circle
+     * 3 - anticlockwise circle
+     */
     void setDirection(motorDirection current_direction);
+
+    /**
+     * @brief Sets up the motors defining the PWM frequency
+     * Attaches the interrupts too
+     */
     void setup();
+
+    /**
+     * @brief Stops the motors from moving completely
+     * 
+     */
     void stopDriving();
     
+    /**
+     * @brief Sets the speed of the motors
+     * 
+     * @param speed the speed to set the motors to
+     */
     void setSpeed(float speed);
+
+    /**
+     * @brief Gets the speed of the motors
+     * 
+     * @return float the speed of the motors
+     */
     float getSpeed();
 
+    /**
+     * @brief Gets the distance travelled by the left wheel
+     * 
+     * @return float the distance travelled by the left wheel
+     */
     float getDistanceTravelledLeft();
+
+    /**
+     * @brief Get the distance travelled by the right wheel
+     * 
+     * @return float the distance travelled by the right wheel
+     */
     float getDistanceTravelledRight();
 
 private:
 
+    /**
+     * @brief Interrupt service routine to count the pulses for the left encoder
+     */
     void countPulseLeft();
+
+    /**
+     * @brief Interrupt service routine to count the pulses for the right encoder
+     */
     void countPulseRight();
 
     float motorSpeed;

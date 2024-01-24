@@ -11,9 +11,14 @@
 #include "joystick.h"
 #include "robot.h"
 
+// Objects for main robot and joystick
 Robot myRobot;
 Joystick myJoystick;
 
+/**
+ * @brief Waits for a serial key press to occur and then continues
+ * Debug function to stop the program each time it switches state
+ */
 void waitForSerial();
 
 /**
@@ -40,9 +45,14 @@ void setup()
  */
 void loop()
 {
+	// Only start state machine when forwards joystick direction pressed
+	// Allows more control over when the robot starts
 	if (myJoystick.checkJoystickPress() == 0)
 	{
+		// Debug function used if wanting to wait for a serial keypress before switching to each next state
 		// waitForSerial();
+
+		// Switch to the current robot state in the state machine
 		switch (myRobot.currentState)
 		{
 			case myRobot.STATE_TESTING:
@@ -57,9 +67,6 @@ void loop()
 			case myRobot.STATE_SOLVE:
 				myRobot.setRGBLED(0, 0, 0);
 				myRobot.solveMaze();
-				break;
-			case myRobot.STATE_SOLVE_KNOWN_MAZE:
-				myRobot.solveKnownMaze();
 				break;
 			case myRobot.STATE_DETERMINE_DIRECTION:
 				myRobot.setRGBLED(0, 1, 1);
@@ -81,7 +88,8 @@ void loop()
 				myRobot.setRGBLED(1, 0, 1);
 				myRobot.moveForwards();
 				break;
-			case myRobot.STATE_BACKWARD:
+			case myRobot.STATE_REVERSE_DIRECTION:
+				myRobot.reverseDirection();
 				break;
 			case myRobot.STATE_LEFT:
 				myRobot.rotateRobot(-90);
@@ -98,15 +106,21 @@ void loop()
 				break;
 		}
 	}
+	// If backwards direction on joystick pressed stop robot and display map
+	// Robot state machine has ended
 	else if (myJoystick.checkJoystickPress() == 1)
 	{
 		myRobot.stopMoving();
-		//myRobot.myMap.displayRobotHistory();
+		myRobot.myMap.displayRobotHistory();
 		myRobot.myMap.displayMap();
 		myRobot.currentState = myRobot.RobotState::STATE_STOP;
 	}
 }
 
+/**
+ * @brief Waits for a serial key press to occur and then continues
+ * Debug function to stop the program each time it switches state
+ */
 void waitForSerial(){
 	while(Serial.available()){Serial.read();}
 	while (!Serial.available()) { }

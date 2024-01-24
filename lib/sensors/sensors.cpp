@@ -14,25 +14,12 @@ const char shift_bit_register = 0x35;
 const int shift_bit = 2;
 char cmd[2];
 
-
-
-
-
 /**
- * @brief Alighing robot perpendicular to wall
- * Measure straight forwards,
- * Measure x degrees to the left
- * Measure x degrees to the right
- * Compare the distances to calculate shortest distance to wall
- * Turn to face the wall at angle that is the shortest distance
-*/
-
-/**
- * @brief Scale sensor distances to be measured from the centre of the robot
+ * @brief Wrapper to call all functions to read and calculate the infrared sensor data
  * 
+ * Call get_front_IR_distance() and get_back_IR_distance() to get the distance
+ * from the front and back IR sensors after this function has been called
  */
-
-
 void Sensors::run_IR_sensors()
 {
 	//float infrared_distance[2] = {0};
@@ -47,6 +34,12 @@ void Sensors::run_IR_sensors()
     //return infrared_distance;
 }
 
+/**
+ * @brief Wrapper to call all functions to read and calculate the ultrasonic sensor data
+ * 
+ * Call get_left_usonic_distance() and get_right_usonic_distance() to get the distance
+ * from the left and right usonic sensors after this function has been called
+ */
 void Sensors::run_usonic_sensors()
 {
 	//int usonic_duration[2], usonic_distance[2]; // Setup variables for results
@@ -62,6 +55,13 @@ void Sensors::run_usonic_sensors()
     //return usonic_distance;
 }
 
+/**
+ * @brief Read the data from the infrared sensors on the I2C bus
+ * 
+ * @param front_sensor whether to read the data for the front or back sensor
+ * True = front sensor
+ * False = back sensor
+ */
 void Sensors::read_IR_data(bool front_sensor)
 {
 	if (front_sensor == true)
@@ -91,6 +91,13 @@ void Sensors::read_IR_data(bool front_sensor)
 	}
 }
 
+/**
+ * @brief Read the data from the ultrasonic sensors on the I2C bus
+ * 
+ * @param left_sensor whether to read the data for the left or right sensor
+ * True = left sensor
+ * False = right sensor
+ */
 float Sensors::read_usonic_data(bool left_sensor)
 {
 	if (left_sensor == true)
@@ -136,6 +143,16 @@ float Sensors::read_usonic_data(bool left_sensor)
 
 }
 
+/**
+ * @brief Calculate the distance from the infrared sensor data read from the I2C bus
+ * Make sure the distance is correctly offset from the centre of the robot
+ * 
+ * @param cmd the data from the sensor
+ * @param front_sensor whether to calculate the distance for the front or back sensor
+ * True = front sensor
+ * False = back sensor
+ * @return float the distance measured by the sensor in cm
+ */
 float Sensors::calculate_infrared_distance(char cmd[2], bool front) 
 {
 	float distance = 0.0f;
@@ -165,6 +182,16 @@ float Sensors::calculate_infrared_distance(char cmd[2], bool front)
 	return distance;
 }
 
+/**
+ * @brief Calculate the distance from the ultrasonic sensor data read from the I2C bus
+ * Make sure the distance is correctly offset from the centre of the robot
+ * 
+ * @param usonic_duration the data from the sensor
+ * @param left_sensor whether to calculate the distance for the left or right sensor
+ * True = left sensor
+ * False = right sensor
+ * @return float the distance measured by the sensor in cm
+ */
 float Sensors::calculate_usonic_distance(float usonic_duration)
 {
 	float distance = 0;
@@ -173,6 +200,11 @@ float Sensors::calculate_usonic_distance(float usonic_duration)
 	return distance;
 }
 
+/**
+ * @brief Print the data from the infrared sensors to the serial monitor
+ * 
+ * @param infrared_distance the distance measured by the infrared sensors
+ */
 void Sensors::print_IR_data(float infrared_distance[2])
 {
 	Serial.println("-------------------------------");
@@ -183,6 +215,11 @@ void Sensors::print_IR_data(float infrared_distance[2])
 	Serial.println("-------------------------------");
 }
 
+/**
+ * @brief Print the data from the ultrasonic sensors to the serial monitor
+ * 
+ * @param usonic_distance the distance measured by the ultrasonic sensors
+ */
 void Sensors::print_usonic_data(float usonic_distance[2])
 {
 	Serial.print("Left usonic distance =  ");
@@ -195,9 +232,9 @@ void Sensors::print_usonic_data(float usonic_distance[2])
 }
 
 /**
- * @brief 
+ * @brief Get the front IR distance after calling run_IR_sensors()
  * 
- * @return float distance in cm
+ * @return float The distance measured by the front sensor in cm
  */
 float Sensors::get_front_IR_distance()
 {
@@ -205,9 +242,9 @@ float Sensors::get_front_IR_distance()
 }
 
 /**
- * @brief 
+ * @brief Get the back IR distance after calling run_IR_sensors()
  * 
- * @return float distance in cm
+ * @return float The distance measured by the back sensor in cm
  */
 float Sensors::get_back_IR_distance()
 {
@@ -215,20 +252,31 @@ float Sensors::get_back_IR_distance()
 }
 
 /**
- * @brief 
+ * @brief Get the right usonic distance after calling run_usonic_sensors()
  * 
- * @return int 
+ * @return float The distance measured by the right sensor in cm
  */
 float Sensors::get_left_usonic_distance()
 {
 	return usonic_distance[0];
 }
 
+/**
+ * @brief Get the left usonic distance after calling run_usonic_sensors()
+ * 
+ * @return float The distance measured by the left sensor in cm
+ */
 float Sensors::get_right_usonic_distance()
 {
 	return usonic_distance[1];
 }
 
+/**
+ * @brief Read data from the front infrared sensors and take multiple readings to calculate and average
+ * 
+ * @param num_sensor_readings - the number of readings to take and average
+ * @return float              - the average distance measured by the front sensor in cm
+ */
 float Sensors::read_averaged_IR_sensor_front(int num_sensor_readings)
 {
 	this->average_infared_distance = 0.0f;
@@ -243,7 +291,12 @@ float Sensors::read_averaged_IR_sensor_front(int num_sensor_readings)
 	this->average_infared_distance = (this->average_infared_distance/(float)num_sensor_readings);
 	return this->average_infared_distance;
 }
-
+/**
+ * @brief Read data from the back infrared sensors and take multiple readings to calculate and average
+ * 
+ * @param num_sensor_readings - the number of readings to take and average
+ * @return float              - the average distance measured by the back sensor in cm
+ */
 float Sensors::read_averaged_IR_sensor_back(int num_sensor_readings)
 {
 	this->average_infared_distance = 0.0f;
@@ -259,7 +312,12 @@ float Sensors::read_averaged_IR_sensor_back(int num_sensor_readings)
 	return this->average_infared_distance;
 }
 
-
+/**
+ * @brief Read data from the left ultrasonic sensors and take multiple readings to calculate and average
+ * 
+ * @param num_sensor_readings - the number of readings to take and average
+ * @return float              - the average distance measured by the left sensor in cm
+ */
 float Sensors::read_averaged_usonic_sensor_left(int num_sensor_readings)
 {
 	this->average_usonic_distance = 0;
@@ -273,7 +331,12 @@ float Sensors::read_averaged_usonic_sensor_left(int num_sensor_readings)
 	this->average_usonic_distance = (this->average_usonic_distance/(float)num_sensor_readings);
 	return this->average_usonic_distance;
 }
-
+/**
+ * @brief Read data from the right ultrasonic sensors and take multiple readings to calculate and average
+ * 
+ * @param num_sensor_readings - the number of readings to take and average
+ * @return float              - the average distance measured by the right sensor in cm
+ */
 float Sensors::read_averaged_usonic_sensor_right(int num_sensor_readings)
 {
 	this->average_usonic_distance = 0;
