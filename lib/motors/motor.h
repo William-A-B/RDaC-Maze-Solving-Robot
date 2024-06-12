@@ -13,7 +13,8 @@
 #include "pindef.h"
 
 // Motor calibration constant to correct speed of motors for a speed of 0.5f
-#define MOTORSHIFT 0.550f
+#define MOTORSHIFT 0.5550f
+// #define MOTORSHIFT 0.5750f
 
 // Correct value to give equal encoder distances for the values of
 // left = 0.046125f
